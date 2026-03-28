@@ -146,13 +146,19 @@ figure {
 }
 
 .name-cn {
-  font-family: "KaiTi", "Kaiti SC", "STKaiti", serif;
+  font-family: "BiauKai", "STKaiti", "Kaiti SC", "KaiTi", "Songti SC", serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 :lang(zh),
 :lang(zh-CN),
 :lang(zh-Hans) {
-  font-family: "KaiTi", "Kaiti SC", "STKaiti", serif;
+  font-family: "BiauKai", "STKaiti", "Kaiti SC", "KaiTi", "Songti SC", serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .intro,
@@ -503,6 +509,10 @@ figure {
     max-width: 15ch;
   }
 
+  .portrait {
+    width: min(240px, 44vw);
+  }
+
   .card-grid,
   .contact-grid,
   .personal-grid {
@@ -522,6 +532,10 @@ figure {
   .content-section {
     padding: 22px;
     border-radius: 22px;
+  }
+
+  .portrait {
+    width: min(200px, 48vw);
   }
 
   .paper-header,
