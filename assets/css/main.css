@@ -318,7 +318,11 @@ figure {
   display: grid;
   grid-template-columns: 140px minmax(0, 1fr);
   gap: 16px;
-  align-items: start;
+  align-items: baseline;
+}
+
+.news-list li + li {
+  margin-top: 10px;
 }
 
 .news-date {
