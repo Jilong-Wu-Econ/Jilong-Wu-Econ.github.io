@@ -423,6 +423,13 @@ figure {
   color: #8f6e2c;
 }
 
+.paper-former-title {
+  margin: -2px 0 10px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
 .paper-abstract {
   margin-top: 12px;
 }
