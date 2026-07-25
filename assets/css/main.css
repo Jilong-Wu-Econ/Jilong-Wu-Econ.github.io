@@ -335,6 +335,11 @@ figure {
   font-size: 1.05rem;
 }
 
+.news-label {
+  color: #8f6e2c;
+  font-weight: 700;
+}
+
 .news-copy a {
   color: var(--accent);
   text-decoration: underline;
