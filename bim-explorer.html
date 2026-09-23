@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bayesian Inference Model Explorer | Jilong Wu</title>
+<meta name="description" content="Interactive walk-through of the Bayesian Inference Model of risky choice: prior, likelihood and posterior for noisy internal signals, and how choices trace out a probability weighting function.">
+<link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+<link rel="stylesheet" href="assets/css/main.css">
+<style>
+:root{
+  --prior:#b8891f; --like:#c0562b; --post:#1f5c4b; --gamble:#3b5f8a; --sure:#c0562b;
+  --ink:#1f1a17; --grid:rgba(31,26,23,.08); --diag:#9a9186; --plot-bg:#fffdf8;
+  --pin0:#7a4a6b; --pin1:#b8891f; --pin2:#4a4540; --warn-bg:#f7ecd6; --warn-ink:#7a5a1c;
+}
+
+/* ---------- layout (built on the site's .page-shell / .content-section) ---------- */
+.page-shell.bim{grid-template-columns:minmax(300px,3fr) minmax(0,7fr);align-items:start}
+.bim-head,.bim-refs{grid-column:1 / -1}
+.bim-main{display:grid;gap:24px;min-width:0}
+.content-section.bim-panel{padding:28px}
+.bim-head .section-heading{margin-bottom:10px}
+.bim-head .hero-text{font-size:1.2rem}
+.bim .label{margin-bottom:12px}
+.lead{color:var(--muted);font-size:1.08rem;margin:-4px 0 16px;max-width:90ch}
+.bim-side{align-self:stretch;min-width:0}
+.bim-controls{padding:24px}
+@media (min-width:861px){
+  .bim-controls{position:sticky;top:20px;max-height:calc(100vh - 40px);overflow-y:auto}
+}
+@media (max-width:860px){ .page-shell.bim{grid-template-columns:1fr} }
+@media (max-width:760px){ .content-section.bim-panel{padding:22px} .bim-controls{padding:22px} }
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:22px;align-items:start}
+.sub-h{font-size:1.02rem;font-weight:700;margin:0 0 4px}
+
+/* ---------- binary choice screen ---------- */
+.choicerow{display:flex;align-items:flex-end;gap:14px 34px;flex-wrap:wrap;padding:6px 0 2px}
+.cell{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:64px}
+.cell .cap{font-size:.95rem;letter-spacing:.02em;color:var(--muted);font-weight:600}
+.cell .val{font-size:1.9rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.cell input[type=radio]{width:21px;height:21px;margin:0;accent-color:var(--post);opacity:.8}
+.cell.rad{height:2.1rem;justify-content:center;min-width:32px}
+
+/* ---------- tabs ---------- */
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-bottom:1px solid var(--line);margin:0 0 24px}
+.tab{font:inherit;font-weight:700;font-size:1.05rem;padding:10px 8px 11px;text-align:center;border:none;background:none;color:var(--muted);
+  border-bottom:3px solid transparent;margin-bottom:-1px;cursor:pointer;border-radius:10px 10px 0 0}
+.tab:hover{color:var(--text);background:rgba(31,92,75,.05)}
+.tab[aria-selected="true"]{color:var(--post);border-bottom-color:var(--post)}
+.tab:focus-visible{outline:2px solid var(--post);outline-offset:-2px}
+.tabpanel .section-heading h3{font-size:1.5rem}
+@media (max-width:520px){.tab{padding:9px 4px 10px;font-size:.9rem}}
+
+/* ---------- controls ---------- */
+.grp + .grp{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+.prow{padding:4px 0 2px}
+.prow + .prow{margin-top:10px}
+.prow-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px}
+.prow-head label{font-weight:600;font-size:1.02rem}
+.sym{display:inline-block;min-width:1.5em;font-style:italic;font-size:1.2rem;color:var(--post)}
+.bim input[type=number]{width:5.4em;font:inherit;text-align:right;padding:4px 9px;color:var(--text);
+  border:1px solid var(--line);border-radius:10px;background:var(--panel-strong)}
+.bim input[type=range]{width:100%;accent-color:var(--post);margin:2px 0}
+.hint{font-size:.9rem;line-height:1.4;color:var(--muted);margin:0 0 4px}
+.payoffs{display:flex;gap:14px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.payoffs label{font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.bim input:focus-visible,.bim button:focus-visible{outline:2px solid var(--post);outline-offset:2px}
+.linkbtn{background:none;border:none;color:var(--post);font:inherit;padding:10px 0 0;cursor:pointer;text-decoration:underline;text-underline-offset:.12em}
+.bim .button{font-family:inherit;color:var(--text);cursor:pointer;min-height:40px;padding:0 18px}
+.bim .button-primary{color:#f8f6ef}
+.btns{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.chk{display:inline-flex;align-items:center;gap:8px;font-size:1rem;cursor:pointer}
+.chk input{accent-color:var(--post);width:18px;height:18px}
+
+/* ---------- equations ---------- */
+.eqs{display:grid;grid-template-columns:max-content 1fr;gap:10px 22px;margin-top:14px;font-size:1.12rem;line-height:1.5}
+.eqs dt{color:var(--post);font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;padding-top:5px}
+.eqs dd{margin:0;overflow-x:auto}
+@media (max-width:700px){.eqs{grid-template-columns:1fr;gap:2px}.eqs dd{margin-bottom:10px}}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .25em}
+.frac>span:first-child{border-bottom:1px solid currentColor;padding:0 .3em 2px}
+.frac>span:last-child{padding:2px .3em 0}
+sup,sub{font-size:.72em;line-height:0}
+
+/* ---------- charts ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:1rem;margin:0 0 12px}
+.lg{display:inline-flex;align-items:center;gap:7px}
+.lg i{display:inline-block;width:20px;height:4px;border-radius:2px}
+.lg i.dash{height:0;border-top:2px dashed var(--diag);background:none}
+.lg i.ink{height:0;border-top:2px dashed var(--ink);background:none}
+.lg button{border:none;background:none;color:var(--muted);cursor:pointer;font:inherit;font-size:1.2rem;line-height:1;padding:0 2px}
+svg.ch{display:block;width:100%;height:auto;user-select:none}
+svg.ch text{fill:var(--muted);font-size:12.5px;font-family:inherit}
+svg.ch .ttl{font-size:13.5px}
+svg.ch .halo{paint-order:stroke;stroke:var(--plot-bg);stroke-width:3.5px;stroke-linejoin:round}
+svg.ch .plotbg{fill:var(--plot-bg);stroke:var(--line);stroke-width:1}
+svg.ch .gridline{stroke:var(--grid);stroke-width:1}
+svg.ch .axis{stroke:var(--muted);stroke-width:1}
+.readout{font-size:1rem;line-height:1.55;margin-top:10px}
+.readout div{margin:2px 0}
+.mut{color:var(--muted)}
+.k-prior{color:var(--prior);font-weight:700}
+.k-like{color:var(--like);font-weight:700}
+.k-post{color:var(--post);font-weight:700}
+.k-gamble{color:var(--gamble);font-weight:700}
+.k-sure{color:var(--sure);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+.chip{border:1px solid var(--line);border-radius:var(--radius-sm);padding:5px 12px;background:var(--panel-strong);font-variant-numeric:tabular-nums;font-size:1rem}
+.chip b{color:var(--post)}
+
+/* ---------- ticket / choice list ---------- */
+.ticket{border:1px solid var(--line);border-radius:var(--radius-md);background:var(--panel-strong);padding:16px 18px;font-size:1.02rem}
+.ticket ol{margin:0;padding:0;list-style:none;counter-reset:st}
+.ticket li{counter-increment:st;position:relative;padding:6px 0 6px 34px}
+.ticket li + li{border-top:1px solid var(--line)}
+.ticket li::before{content:counter(st);position:absolute;left:0;top:8px;width:22px;height:22px;border-radius:50%;
+  background:rgba(31,92,75,.1);color:var(--post);font-weight:700;font-size:.85rem;text-align:center;line-height:22px}
+.decision{font-size:1.15rem;font-weight:700}
+.mpl{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:5px;margin-top:6px}
+.mplc{border:1px solid var(--line);border-radius:10px;padding:4px 2px;text-align:center;font-variant-numeric:tabular-nums;line-height:1.25}
+.mplc .a{display:block;font-size:.8rem;color:var(--muted)}
+.mplc .g{display:block;font-weight:700}
+.mplc.sw{outline:2px solid var(--post);outline-offset:1px}
+@media (max-width:520px){.mpl{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.gradbar{height:12px;border-radius:6px;background:linear-gradient(90deg,#c0562b,#fffbf0 50%,#3b5f8a);border:1px solid var(--line);margin:4px 0 2px}
+.gradlab{display:flex;justify-content:space-between;font-size:.9rem;color:var(--muted)}
+.regions{font-size:1.02rem;margin:8px 0 4px}
+.regions div{margin:2px 0}
+.bim-refs{color:var(--muted);font-size:.95rem;padding:0 6px}
+.bim a.inl{color:var(--post);text-decoration:underline;text-underline-offset:.12em}
+noscript{display:block;padding:12px;background:var(--warn-bg);color:var(--warn-ink);border-radius:var(--radius-sm)}
+</style>
+</head>
+<body>
+<div class="page-shell bim">
+
+  <header class="content-section bim-head">
+    <div class="section-heading section-heading-inline">
+      <div><h3>Bayesian Inference Model: from noisy coding to probability weighting</h3></div>
+      <a class="hero-link" href="index.html#resources">Back to homepage</a>
+    </div>
+    <p class="hero-text">In the Bayesian inference model of Bouchouicha, Oprea, Vieider and Wu (2026), a decision maker infers two quantities from noisy internal signals: how likely the event is, and how large the gain from a gamble is relative to its cost. Each noisy signal is decoded with a mental prior. Move the priors and the coding noise, watch the posterior form, and see how the resulting choices trace out a probability weighting curve.</p>
+    <noscript>This page needs JavaScript to draw the charts.</noscript>
+  </header>
+
+  <!-- LEFT: controls -->
+  <aside class="bim-side" aria-label="Model controls"><div class="content-section bim-controls">
+    <div class="grp">
+      <p class="label">Choice problem</p>
+      <div id="grp_choice"></div>
+    </div>
+    <div class="grp">
+      <p class="label">Mental priors</p>
+      <div id="grp_prior"></div>
+    </div>
+    <div class="grp">
+      <p class="label">Coding noise</p>
+      <div id="grp_noise"></div>
+    </div>
+    <button class="linkbtn" id="reset" type="button">Reset to default values</button>
+  </div></aside>
+
+  <!-- RIGHT: story -->
+  <div class="bim-main">
+
+    <!-- STEP 1 -->
+    <section class="content-section bim-panel" aria-labelledby="hcs">
+      <p class="label" id="hcs">The binary choice</p>
+      <div class="choicerow" role="group" aria-label="Binary choice: sure amount versus gamble (display only)">
+        <div class="cell"><span class="cap">Sure amount</span><span class="val" id="crc"></span></div>
+        <div class="cell rad"><input type="radio" name="disp" disabled aria-label="Take the sure amount (display only)"></div>
+        <div class="cell rad"><input type="radio" name="disp" disabled aria-label="Take the gamble (display only)"></div>
+        <div class="cell"><span class="cap">Gamble (x, p; y)</span><span class="val" id="crg"></span></div>
+      </div>
+    </section>
+
+    <section class="content-section bim-panel" aria-label="Model results">
+      <div class="tabs" role="tablist" aria-label="Display sections">
+        <button class="tab" role="tab" type="button" id="tab1" aria-controls="pan1" aria-selected="true">1 · Posterior inference</button>
+        <button class="tab" role="tab" type="button" id="tab2" aria-controls="pan2" aria-selected="false" tabindex="-1">2 · Risky choice</button>
+        <button class="tab" role="tab" type="button" id="tab3" aria-controls="pan3" aria-selected="false" tabindex="-1">3 · Weighting curve</button>
+      </div>
+    <div class="tabpanel" role="tabpanel" id="pan1" aria-labelledby="tab1">
+      <div class="section-heading"><div><h3 id="h1">1 · Prior, likelihood and posterior</h3></div></div>
+      <p class="lead">The mind encodes the log-odds of the event and the log cost–benefit ratio with common noise <i>ν</i>. Each noisy signal <i>r</i> defines a likelihood; combined with the mental prior it gives a posterior. The posterior mean is a weighted average of the signal and the prior mean, with weight <i>γ</i> (odds) or <i>α</i> (outcomes) on the signal.</p>
+      <div class="legend">
+        <span class="lg"><i style="background:var(--prior)"></i>Prior</span>
+        <span class="lg"><i style="background:var(--like)"></i>Likelihood of the noisy signal</span>
+        <span class="lg"><i style="background:var(--post)"></i>Posterior</span>
+        <span class="lg"><i class="ink"></i>True value</span>
+      </div>
+      <div class="two">
+        <div>
+          <p class="sub-h">Likelihood dimension: how likely is the event?</p>
+          <svg class="ch" id="chE" viewBox="0 0 480 290" role="img" aria-label="Prior, likelihood and posterior over the log-odds of the event"></svg>
+          <div class="readout" id="roE"></div>
+        </div>
+        <div>
+          <p class="sub-h">Outcome dimension: gain relative to cost</p>
+          <svg class="ch" id="chO" viewBox="0 0 480 290" role="img" aria-label="Prior, likelihood and posterior over the log cost-benefit ratio"></svg>
+          <div class="readout" id="roO"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="tabpanel" role="tabpanel" id="pan2" aria-labelledby="tab2" hidden>
+      <div class="section-heading"><div><h3 id="h2">2 · Applying the posterior to a risky choice</h3></div></div>
+      <p class="lead">The gamble is chosen when the posterior mean log-odds exceed the posterior mean log cost–benefit ratio. Because the signals are noisy, the same problem can produce different choices: averaged over noise this is a probit rule, and the noise that shapes the decision variable is the same <i>ν</i> that shrinks the posteriors.</p>
+      <div class="btns" style="margin-bottom:14px">
+        <button class="button button-primary" id="redraw" type="button">Draw new signals</button>
+        <label class="chk"><input type="checkbox" id="noisy" checked> Add coding noise to the shown signals</label>
+      </div>
+      <div class="two">
+        <div>
+          <p class="sub-h">Probability of choosing the gamble, by sure amount</p>
+          <svg class="ch" id="chC" viewBox="0 0 520 320" role="img" aria-label="Probability of choosing the gamble as a function of the sure amount"></svg>
+        </div>
+        <div>
+          <p class="sub-h">One trial, step by step</p>
+          <div class="ticket" id="ticket"></div>
+        </div>
+      </div>
+      <p class="sub-h" style="margin-top:18px">As a choice list: sure amounts from low to high</p>
+      <div class="mpl" id="mpl"></div>
+      <p class="hint" id="mplNote" style="margin-top:8px"></p>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="tabpanel" role="tabpanel" id="pan3" aria-labelledby="tab3" hidden>
+      <div class="section-heading section-heading-inline" style="justify-content:space-between;align-items:center;flex-wrap:wrap">
+        <div><h3 id="h3">3 · Tracing out the probability weighting function</h3></div>
+        <div class="btns">
+          <button class="button button-primary" id="pin" type="button" title="Keep this curve to compare with other parameter values">Pin this curve</button>
+          <button class="button" id="clear" type="button">Clear pins</button>
+        </div>
+      </div>
+      <p class="lead">For each probability <i>P</i>, find the sure amount <i>c</i>* at which the decision maker is indifferent (a 50% choice probability). The decision weight is <i>π</i>(<i>P</i>) = (<i>c</i>* − <i>y</i>)/(<i>x</i> − <i>y</i>). The map shows the choice probability for every (<i>P</i>, <i>c</i>) pair; its 50% contour is the weighting function. Hover to read the map, click to set the choice problem.</p>
+      <div class="legend" id="legD"></div>
+      <div class="two" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))">
+        <div>
+          <svg class="ch" id="chD" viewBox="0 0 560 560" role="img" aria-label="Choice probability map over probability and sure amount, with the 50 percent contour as the weighting function" style="max-width:640px;margin:0 auto"></svg>
+          <div style="max-width:640px;margin:6px auto 0">
+            <div class="gradbar"></div>
+            <div class="gradlab"><span>Sure amount chosen</span><span>50%</span><span>Gamble chosen</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="readout" id="roD"></div>
+          <div class="chips" id="chipsD"></div>
+          <div class="regions" id="regD"></div>
+          <div class="readout" id="mapD" style="margin-top:14px"></div>
+        </div>
+      </div>
+    </div>
+    </section>
+
+    <section class="content-section bim-panel" aria-label="Model equations">
+      <details class="paper-abstract" style="margin-top:0">
+        <summary>Model at a glance (equations)</summary>
+        <dl class="eqs">
+          <dt>Signals</dt>
+          <dd><i>r<sub>e</sub></i> ~ N( ln[<i>P</i>/(1−<i>P</i>)], <i>ν</i>² ), &nbsp; <i>r<sub>o</sub></i> ~ N( ln[(<i>c</i>−<i>y</i>)/(<i>x</i>−<i>c</i>)], <i>ν</i>² )</dd>
+          <dt>Priors</dt>
+          <dd>ln[<i>P</i>/(1−<i>P</i>)] ~ N( ln <i>ξ</i>, <i>σ<sub>e</sub></i>² ), &nbsp; ln[(<i>c</i>−<i>y</i>)/(<i>x</i>−<i>c</i>)] ~ N( ln <i>ζ</i>, <i>σ<sub>o</sub></i>² )</dd>
+          <dt>Posterior</dt>
+          <dd>mean <i>γ r<sub>e</sub></i> + (1−<i>γ</i>) ln <i>ξ</i> &nbsp;and&nbsp; <i>α r<sub>o</sub></i> + (1−<i>α</i>) ln <i>ζ</i>; &nbsp; variance <i>γν</i>² and <i>αν</i>²<br>
+            <i>γ</i> = <i>σ<sub>e</sub></i>²/(<i>σ<sub>e</sub></i>²+<i>ν</i>²), &nbsp; <i>α</i> = <i>σ<sub>o</sub></i>²/(<i>σ<sub>o</sub></i>²+<i>ν</i>²)</dd>
+          <dt>Choice rule</dt>
+          <dd>choose the gamble iff <i>γ r<sub>e</sub></i> − <i>α r<sub>o</sub></i> &gt; −ln <i>δ</i>, &nbsp; with <i>δ</i> = <i>ξ</i><sup>1−<i>γ</i></sup> <i>ζ</i><sup><i>α</i>−1</sup></dd>
+          <dt>Choice prob.</dt>
+          <dd>Pr[gamble ≻ <i>c</i>] = Φ( [ <i>γ</i> ln(<i>P</i>/(1−<i>P</i>)) − <i>α</i> ln((<i>c</i>−<i>y</i>)/(<i>x</i>−<i>c</i>)) + ln <i>δ</i> ] / <i>ω</i> ), &nbsp; <i>ω</i> = <i>ν</i>√(<i>γ</i>²+<i>α</i>²)</dd>
+          <dt>Weighting</dt>
+          <dd><i>π</i>(<i>P</i>) = (<i>c</i>*−<i>y</i>)/(<i>x</i>−<i>y</i>) = <span class="frac"><span><i>δ</i><sup>1/<i>α</i></sup> <i>P</i><sup><i>γ</i>/<i>α</i></sup></span><span><i>δ</i><sup>1/<i>α</i></sup> <i>P</i><sup><i>γ</i>/<i>α</i></sup> + (1−<i>P</i>)<sup><i>γ</i>/<i>α</i></sup></span></span>, where <i>c</i>* is the sure amount with Pr = 50%</dd>
+        </dl>
+      </details>
+    </section>
+
+  </div>
+
+  <p class="bim-refs">
+    The model follows Bouchouicha, Oprea, Vieider and Wu (2026), <a class="inl" href="documents/FF_pattern_Jilong.pdf" target="_blank" rel="noopener noreferrer"><em>Cognitive Frictions and Canonical Patterns in Risk-Taking</em></a>. This page is an illustration of the model's mechanics; default parameter values are illustrative and are not estimates. The weighting function that results has the Goldstein–Einhorn form (see the <a class="inl" href="pwf-explorer.html">probability weighting function explorer</a>).
+  </p>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ------------------------------------------------------------------ */
+/*  helpers                                                            */
+/* ------------------------------------------------------------------ */
+const $ = id => document.getElementById(id);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const f = (x, d = 2) => Number(x).toFixed(d).replace('-', '−');
+const sg = (x, d = 2) => (x >= 0 ? '+' : '−') + Number(Math.abs(x)).toFixed(d);
+const money = v => { const s = Number(v).toFixed(Math.abs(v) >= 100 ? 0 : 1); return String(+s).replace('-', '−'); };
+const logit = p => Math.log(p / (1 - p));
+const expit = z => 1 / (1 + Math.exp(-z));
+const SQ2PI = Math.sqrt(2 * Math.PI);
+
+function erf(x) {                                   // Abramowitz–Stegun 7.1.26
+  const s = Math.sign(x); x = Math.abs(x);
+  const t = 1 / (1 + 0.3275911 * x);
+  const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+  return s * y;
+}
+const Phi = x => 0.5 * (1 + erf(x / Math.SQRT2));
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const gauss = rnd => Math.sqrt(-2 * Math.log(1 - rnd())) * Math.cos(2 * Math.PI * rnd());
+
+const NSIM = 4000;                                  // fixed noise draws: stable simulation
+const Z1 = new Float64Array(NSIM), Z2 = new Float64Array(NSIM);
+(() => { const r = mulberry32(20240607); for (let i = 0; i < NSIM; i++) { Z1[i] = gauss(r); Z2[i] = gauss(r); } })();
+
+/* ------------------------------------------------------------------ */
+/*  state and model                                                    */
+/* ------------------------------------------------------------------ */
+const DEFAULTS = { P: 0.30, sc: 0.25, psi: 0.40, zeta: 1, se: 0.9, so: 2.0, nu: 0.8, x: 100, y: 0 };
+const st = Object.assign({}, DEFAULTS, { noisy: true, z: [0.7, -0.5], tab: 0 });
+let pins = [];
+
+function derive(s) {
+  const g = s.se ** 2 / (s.se ** 2 + s.nu ** 2), a = s.so ** 2 / (s.so ** 2 + s.nu ** 2);
+  const lnxi = Math.log(s.psi / (1 - s.psi)), lnz = Math.log(s.zeta);
+  const lnd = (1 - g) * lnxi + (a - 1) * lnz;
+  return { g, a, lnxi, lnz, lnd, nu: s.nu, om: s.nu * Math.hypot(g, a),
+           geG: g / a, geD: Math.exp(lnd / a), delta: Math.exp(lnd) };
+}
+const prChoice = (d, P, sc) => Phi((d.g * logit(P) - d.a * logit(sc) + d.lnd) / d.om);
+const pwf = (d, P) => P <= 0 ? 0 : P >= 1 ? 1 : expit((d.lnd + d.g * logit(P)) / d.a);
+function bisect(d, P) {                             // indifference share found from the choice model itself
+  let lo = 1e-6, hi = 1 - 1e-6;
+  for (let i = 0; i < 50; i++) { const m = (lo + hi) / 2; if (prChoice(d, P, m) > 0.5) lo = m; else hi = m; }
+  return (lo + hi) / 2;
+}
+
+/* ------------------------------------------------------------------ */
+/*  controls                                                           */
+/* ------------------------------------------------------------------ */
+const PARAMS = [
+  { k: 'P', grp: 'choice', sym: 'P', name: 'Probability of the event', min: .01, max: .99, step: .01, dec: 2,
+    hint: 'Chance of receiving the high payoff x. The mind sees it only through a noisy log-odds signal.' },
+  { k: 'x', grp: 'choice', sym: 'x', name: 'High payoff', min: 20, max: 200, step: 1, dec: 0,
+    hint: 'Payoff if the event occurs. Must exceed y by at least 10.' },
+  { k: 'y', grp: 'choice', sym: 'y', name: 'Low payoff', min: 0, max: 90, step: 1, dec: 0,
+    hint: 'Payoff if it does not. The sure amount c is kept fixed when x or y move, if it still fits between them.' },
+  { k: 'sc', grp: 'choice', sym: 'c', name: 'Sure amount', min: .01, max: .99, step: .005, dec: 1,
+    hint: 'The safe alternative. It enters through the ratio (c−y)/(x−c).',
+    toDisp: v => st.y + v * (st.x - st.y), fromDisp: t => (t - st.y) / (st.x - st.y) },
+  { k: 'psi', grp: 'prior', sym: 'ψ', name: 'Prior probability of the event', min: .05, max: .95, step: .01, dec: 2,
+    hint: 'Centre of the prior on odds, ξ = ψ/(1−ψ). It is the fixed point of the weighting curve when α = 1.' },
+  { k: 'zeta', grp: 'prior', sym: 'ζ', name: 'Prior cost–benefit ratio', min: .2, max: 5, step: .01, dec: 2, log: true,
+    hint: 'Prior centre of (c−y)/(x−c). 1 means benefits and costs of the gamble are expected to balance.' },
+  { k: 'se', grp: 'prior', sym: 'σ<sub>e</sub>', name: 'Prior spread, odds', min: .2, max: 3, step: .01, dec: 2,
+    hint: 'A wider prior means more weight on the signal (γ rises).' },
+  { k: 'so', grp: 'prior', sym: 'σ<sub>o</sub>', name: 'Prior spread, outcomes', min: .2, max: 4, step: .01, dec: 2,
+    hint: 'A wider prior means more weight on the signal (α rises).' },
+  { k: 'nu', grp: 'noise', sym: 'ν', name: 'Coding noise (sd)', min: .1, max: 3, step: .01, dec: 2,
+    hint: 'Noise in both internal signals. More noise: stronger shrinkage (γ, α fall) and noisier choices.' }
+];
+const P_BY = {}; PARAMS.forEach(p => P_BY[p.k] = p);
+const rng = p => p.k === 'x' ? [Math.max(p.min, st.y + 10), p.max] : p.k === 'y' ? [p.min, Math.min(p.max, st.x - 10)] : [p.min, p.max];
+
+function buildControls() {
+  PARAMS.forEach(p => {
+    $('grp_' + p.grp).insertAdjacentHTML('beforeend',
+      `<div class="prow"><div class="prow-head"><label for="s_${p.k}"><span class="sym">${p.sym}</span> ${p.name}</label>` +
+      `<input type="number" id="n_${p.k}" aria-label="${p.name}"></div>` +
+      `<input type="range" id="s_${p.k}"><div class="hint">${p.hint}</div></div>`);
+  });
+  PARAMS.forEach(p => {
+    const s = $('s_' + p.k), n = $('n_' + p.k);
+    s.addEventListener('input', () => { setParam(p, p.log ? Math.exp(+s.value) : +s.value); syncControls(); render(); });
+    n.addEventListener('input', () => {
+      const t = parseFloat(n.value); if (!isFinite(t)) return;
+      const v = p.fromDisp ? p.fromDisp(t) : t, [lo, hi] = rng(p);
+      if (v >= lo && v <= hi) { setParam(p, v); syncControls(p.k); render(); }
+    });
+    n.addEventListener('change', () => { const t = parseFloat(n.value); if (isFinite(t)) setParam(p, p.fromDisp ? p.fromDisp(t) : t); syncControls(); render(); });
+  });
+}
+function setParam(p, v) {
+  const c = st.y + st.sc * (st.x - st.y), [lo, hi] = rng(p);
+  st[p.k] = clamp(v, lo, hi);
+  if (p.k === 'x' || p.k === 'y') st.sc = clamp((c - st.y) / (st.x - st.y), .01, .99);   // keep c fixed in payoff units
+}
+function syncControls(skipK) {
+  PARAMS.forEach(p => {
+    const s = $('s_' + p.k), n = $('n_' + p.k), v = st[p.k], [lo, hi] = rng(p);
+    if (p.log) { s.min = Math.log(lo); s.max = Math.log(hi); s.step = 0.005; s.value = Math.log(v); }
+    else { s.min = lo; s.max = hi; s.step = p.step; s.value = v; }
+    if (p.k !== skipK) n.value = (p.toDisp ? p.toDisp(v) : v).toFixed(p.dec);
+    n.min = p.toDisp ? p.toDisp(lo) : lo; n.max = p.toDisp ? p.toDisp(hi) : hi;
+    n.step = p.toDisp ? (st.x - st.y) / 100 : p.step;
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/*  chart 1: prior, likelihood, posterior over a log scale             */
+/* ------------------------------------------------------------------ */
+const TICKP = [0.001, 0.01, 0.05, 0.25, 0.5, 0.75, 0.95, 0.99, 0.999];
+function densitySVG(uid, o) {
+  const W = 480, H = 290, m = { l: 30, r: 14, t: 14, b: 58 }, iw = W - m.l - m.r, ih = H - m.t - m.b, lo = -7, hi = 7;
+  const X = v => m.l + (v - lo) / (hi - lo) * iw;
+  const cs = [o.prior, o.like, o.post];
+  const ymax = Math.max(...cs.map(c => 1 / (c.sd * SQ2PI))) * 1.15;
+  const base = m.t + ih, Y = v => m.t + ih * (1 - v / ymax);
+  const pdf = (v, c) => Math.exp(-0.5 * ((v - c.m) / c.sd) ** 2) / (c.sd * SQ2PI);
+  const path = c => { let d = ''; const N = 300; for (let i = 0; i <= N; i++) { const v = lo + (hi - lo) * i / N; d += (i ? 'L' : 'M') + X(v).toFixed(1) + ' ' + Y(pdf(v, c)).toFixed(1); } return d; };
+  let s = `<defs><clipPath id="cp${uid}"><rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}"/></clipPath>` +
+          `<marker id="ah${uid}" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="var(--post)"/></marker></defs>`;
+  s += `<rect class="plotbg" x="${m.l}" y="${m.t}" width="${iw}" height="${ih}"/>`;
+  TICKP.forEach(p => {
+    const x = X(logit(p));
+    s += `<line class="gridline" x1="${x}" y1="${m.t}" x2="${x}" y2="${base}"/>`;
+    s += `<line class="axis" x1="${x}" y1="${base}" x2="${x}" y2="${base + 5}"/>`;
+    s += `<text x="${x}" y="${base + 19}" text-anchor="middle">${o.tick(p)}</text>`;
+  });
+  s += `<line class="axis" x1="${m.l}" y1="${base}" x2="${m.l + iw}" y2="${base}"/>`;
+  s += `<g clip-path="url(#cp${uid})">`;
+  [['var(--prior)', o.prior], ['var(--like)', o.like], ['var(--post)', o.post]].forEach(([col, c]) => {
+    const d = path(c);
+    s += `<path d="${d}L${X(hi)} ${base}L${X(lo)} ${base}Z" fill="${col}" opacity=".13"/>`;
+    s += `<path d="${d}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linejoin="round"/>`;
+  });
+  s += `<line x1="${X(o.truth)}" y1="${m.t}" x2="${X(o.truth)}" y2="${base}" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+  s += `</g>`;
+  s += `<text class="halo" x="${clamp(X(o.truth) + 5, m.l, W - 40)}" y="${m.t + 13}">true</text>`;
+  // markers on the axis: prior mean, signal, posterior mean
+  const tri = (v, col) => { const x = clamp(X(v), m.l, m.l + iw); return `<path d="M${x} ${base - 11}L${x - 5.5} ${base - 1}L${x + 5.5} ${base - 1}Z" fill="${col}" stroke="var(--plot-bg)" stroke-width="1.2"/>`; };
+  if (Math.abs(o.like.m - o.post.m) > 0.08) {
+    const y0 = base - 22, x1 = clamp(X(o.like.m), m.l, m.l + iw), x2 = clamp(X(o.post.m), m.l, m.l + iw);
+    s += `<line x1="${x1}" y1="${y0}" x2="${x2}" y2="${y0}" stroke="var(--post)" stroke-width="2" marker-end="url(#ah${uid})"/>`;
+  }
+  s += tri(o.prior.m, 'var(--prior)') + tri(o.like.m, 'var(--like)') + tri(o.post.m, 'var(--post)');
+  s += `<text x="${m.l + iw / 2}" y="${H - 8}" text-anchor="middle" class="ttl">${o.xTitle}</text>`;
+  s += `<text transform="translate(11 ${m.t + ih / 2}) rotate(-90)" text-anchor="middle">density</text>`;
+  return s;
+}
+
+/* ------------------------------------------------------------------ */
+/*  chart 2: psychometric curve in the sure amount                     */
+/* ------------------------------------------------------------------ */
+function choiceSVG(d) {
+  const W = 520, H = 320, m = { l: 54, r: 18, t: 16, b: 54 }, iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const x = st.x, y = st.y, X = c => m.l + (c - y) / (x - y) * iw, Y = p => m.t + ih * (1 - p);
+  let s = `<rect class="plotbg" x="${m.l}" y="${m.t}" width="${iw}" height="${ih}"/>`;
+  for (let i = 0; i <= 5; i++) {
+    const c = y + (x - y) * i / 5;
+    s += `<line class="gridline" x1="${X(c)}" y1="${m.t}" x2="${X(c)}" y2="${m.t + ih}"/>`;
+    s += `<text x="${X(c)}" y="${m.t + ih + 18}" text-anchor="middle">${money(c)}</text>`;
+  }
+  [0, .25, .5, .75, 1].forEach(p => {
+    s += `<line class="gridline" x1="${m.l}" y1="${Y(p)}" x2="${m.l + iw}" y2="${Y(p)}"${p === .5 ? ' style="stroke:var(--diag);stroke-dasharray:4 4"' : ''}/>`;
+    s += `<text x="${m.l - 8}" y="${Y(p) + 4}" text-anchor="end">${Math.round(p * 100)}%</text>`;
+  });
+  let dd = ''; const N = 320;
+  for (let i = 0; i <= N; i++) { const sc = 0.002 + 0.996 * i / N; dd += (i ? 'L' : 'M') + X(y + sc * (x - y)).toFixed(1) + ' ' + Y(prChoice(d, st.P, sc)).toFixed(1); }
+  s += `<path d="${dd}" fill="none" stroke="var(--gamble)" stroke-width="3.2" stroke-linecap="round"/>`;
+  const cStar = y + expit((d.lnd + d.g * logit(st.P)) / d.a) * (x - y), ev = st.P * x + (1 - st.P) * y, cur = y + st.sc * (x - y);
+  const line = (c, col, dash, lab, row) => {
+    const xx = X(c), anchor = xx > W - 90 ? 'end' : 'start', dx = anchor === 'end' ? -5 : 5;
+    return `<line x1="${xx}" y1="${m.t}" x2="${xx}" y2="${m.t + ih}" stroke="${col}" stroke-width="1.8" stroke-dasharray="${dash}"/>` +
+           `<text class="halo" x="${xx + dx}" y="${m.t + 13 + row * 15}" text-anchor="${anchor}" style="fill:${col};font-weight:700">${lab}</text>`;
+  };
+  s += line(ev, 'var(--diag)', '2 4', `EV = ${money(ev)}`, 2);
+  s += line(cStar, 'var(--post)', '0', `c* = ${money(cStar)}`, 0);
+  s += line(cur, 'var(--like)', '5 4', `c = ${money(cur)}`, 1);
+  s += `<circle cx="${X(cur)}" cy="${Y(prChoice(d, st.P, st.sc))}" r="5.5" fill="var(--like)" stroke="var(--plot-bg)" stroke-width="2"/>`;
+  s += `<circle cx="${X(cStar)}" cy="${Y(.5)}" r="5.5" fill="var(--post)" stroke="var(--plot-bg)" stroke-width="2"/>`;
+  s += `<text x="${m.l + iw / 2}" y="${H - 8}" text-anchor="middle" class="ttl">Sure amount c</text>`;
+  s += `<text transform="translate(14 ${m.t + ih / 2}) rotate(-90)" text-anchor="middle" class="ttl">Pr(choose gamble)</text>`;
+  return s;
+}
+
+/* ------------------------------------------------------------------ */
+/*  chart 3: choice-probability map + weighting curve                  */
+/* ------------------------------------------------------------------ */
+const GW = 560, GM = { l: 60, r: 20, t: 20, b: 60 }, GI = GW - GM.l - GM.r;
+const GX = p => GM.l + p * GI, GY = v => GM.t + (1 - v) * GI;
+const cvs = document.createElement('canvas'); cvs.width = cvs.height = 200;
+function probRGB(p) {
+  const A = [192, 86, 43], B = [255, 251, 240], C = [59, 95, 138];
+  const [u, v, t] = p < .5 ? [A, B, p / .5] : [B, C, (p - .5) / .5];
+  return [0, 1, 2].map(i => Math.round(u[i] + (v[i] - u[i]) * t));
+}
+function heatURL(d) {
+  const n = 200, ctx = cvs.getContext('2d'), img = ctx.createImageData(n, n);
+  const lp = new Float64Array(n), ls = new Float64Array(n);
+  for (let i = 0; i < n; i++) { lp[i] = d.g * logit((i + .5) / n); ls[i] = d.a * logit(1 - (i + .5) / n); }
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const p = Phi((lp[i] - ls[j] + d.lnd) / d.om), [r, g, b] = probRGB(p), k = 4 * (j * n + i);
+    img.data[k] = r; img.data[k + 1] = g; img.data[k + 2] = b; img.data[k + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  return cvs.toDataURL();
+}
+function curvePath(d) {
+  let s = ''; const N = 260;
+  for (let i = 0; i <= N; i++) { const p = 0.5 - 0.5 * Math.cos(Math.PI * i / N); s += (i ? 'L' : 'M') + GX(p).toFixed(1) + ' ' + GY(pwf(d, p)).toFixed(1); }
+  return s;
+}
+function mapSVG(d) {
+  let s = `<image id="hm" x="${GM.l}" y="${GM.t}" width="${GI}" height="${GI}" preserveAspectRatio="none" href="${heatURL(d)}"/>`;
+  s += `<rect x="${GM.l}" y="${GM.t}" width="${GI}" height="${GI}" fill="none" stroke="var(--line)"/>`;
+  for (let i = 0; i <= 5; i++) {
+    const t = i / 5, lab = t === 0 ? '0' : t === 1 ? '1' : t.toFixed(1);
+    s += `<line class="axis" x1="${GX(t)}" y1="${GY(0)}" x2="${GX(t)}" y2="${GY(0) + 5}"/><text x="${GX(t)}" y="${GY(0) + 19}" text-anchor="middle">${lab}</text>`;
+    s += `<line class="axis" x1="${GX(0) - 5}" y1="${GY(t)}" x2="${GX(0)}" y2="${GY(t)}"/><text x="${GX(0) - 9}" y="${GY(t) + 4}" text-anchor="end">${lab}</text>`;
+  }
+  s += `<line x1="${GX(0)}" y1="${GY(0)}" x2="${GX(1)}" y2="${GY(1)}" stroke="var(--ink)" stroke-width="1.3" stroke-dasharray="5 5" opacity=".65"/>`;
+  s += `<text class="halo" x="${GX(.03)}" y="${GY(.96)}" style="fill:var(--sure);font-weight:700;font-size:13px">Takes the sure amount</text>`;
+  s += `<text class="halo" x="${GX(.97)}" y="${GY(.04)}" text-anchor="end" style="fill:var(--gamble);font-weight:700;font-size:13px">Takes the gamble</text>`;
+  pins.forEach(p => { const dd = curvePath(p.d); s += `<path d="${dd}" fill="none" stroke="#fff" stroke-width="5.5" opacity=".75"/><path d="${dd}" fill="none" stroke="var(--pin${p.c})" stroke-width="2.6"/>`; });
+  const cd = curvePath(d);
+  s += `<path d="${cd}" fill="none" stroke="#fff" stroke-width="7" opacity=".85" stroke-linecap="round"/><path d="${cd}" fill="none" stroke="var(--post)" stroke-width="3.6" stroke-linecap="round"/>`;
+  [.05, .1, .2, .3, .4, .5, .6, .7, .8, .9, .95].forEach(p => {
+    s += `<circle cx="${GX(p)}" cy="${GY(bisect(d, p))}" r="4.6" fill="#fff" stroke="var(--post)" stroke-width="2"/>`;
+  });
+  const cur = pwf(d, st.P);
+  s += `<line x1="${GX(st.P)}" y1="${GY(0)}" x2="${GX(st.P)}" y2="${GY(cur)}" stroke="var(--post)" stroke-width="1.4" stroke-dasharray="3 3"/>`;
+  s += `<line x1="${GX(0)}" y1="${GY(cur)}" x2="${GX(st.P)}" y2="${GY(cur)}" stroke="var(--post)" stroke-width="1.4" stroke-dasharray="3 3"/>`;
+  s += `<circle cx="${GX(st.P)}" cy="${GY(cur)}" r="6.5" fill="var(--post)" stroke="#fff" stroke-width="2.2"/>`;
+  s += `<circle cx="${GX(st.P)}" cy="${GY(st.sc)}" r="6.5" fill="none" stroke="#fff" stroke-width="4.5"/><circle cx="${GX(st.P)}" cy="${GY(st.sc)}" r="6.5" fill="none" stroke="var(--like)" stroke-width="2.6"/>`;
+  s += `<g id="mh" style="display:none"><circle id="mhc" r="4" fill="var(--ink)" stroke="#fff" stroke-width="1.5"/></g>`;
+  s += `<text x="${GX(.5)}" y="${GW - 14}" text-anchor="middle" class="ttl">Probability of the event, P</text>`;
+  s += `<text transform="translate(16 ${GY(.5)}) rotate(-90)" text-anchor="middle" class="ttl">Sure amount as share of payoff range, (c − y)/(x − y)</text>`;
+  s += `<rect id="mcap" x="${GM.l}" y="${GM.t}" width="${GI}" height="${GI}" fill="transparent" style="cursor:crosshair"/>`;
+  return s;
+}
+
+/* where does the curve lie above / below the diagonal? */
+function regionsOf(d) {
+  const N = 1000, eps = 1e-6; let last = null, s0 = 0; const cross = [];
+  for (let k = 1; k < N; k++) {
+    const p = k / N, dd = pwf(d, p) - p, sgn = dd > eps ? 1 : dd < -eps ? -1 : 0;
+    if (!sgn) continue;
+    if (last === null) s0 = sgn; else if (sgn !== last.sg) cross.push(last.p + (0 - last.d) * (p - last.p) / (dd - last.d));
+    last = { p, d: dd, sg: sgn };
+  }
+  if (last === null) return null;
+  const over = [], under = [], b = [0, ...cross, 1];
+  b.slice(0, -1).forEach((lo, i) => { (s0 * (i % 2 ? -1 : 1) > 0 ? over : under).push(`(${f(lo)}, ${f(b[i + 1])})`); });
+  return { over, under, cross };
+}
+
+/* ------------------------------------------------------------------ */
+/*  render                                                             */
+/* ------------------------------------------------------------------ */
+function render() {
+  const d = derive(st), x = st.x, y = st.y;
+  const thE = logit(st.P), thO = logit(st.sc), cur = y + st.sc * (x - y);
+  const zE = st.noisy ? st.z[0] : 0, zO = st.noisy ? st.z[1] : 0;
+  const rE = thE + st.nu * zE, rO = thO + st.nu * zO;
+  const mE = d.g * rE + (1 - d.g) * d.lnxi, mO = d.a * rO + (1 - d.a) * d.lnz;
+  const sdE = st.nu * Math.sqrt(d.g), sdO = st.nu * Math.sqrt(d.a);
+
+  /* binary choice screen */
+  $('crc').textContent = money(cur);
+  $('crg').textContent = `(${money(x)}, ${f(st.P)}; ${money(y)})`;
+
+  /* step 1 */
+  $('chE').innerHTML = densitySVG('E', { prior: { m: d.lnxi, sd: st.se }, like: { m: rE, sd: st.nu }, post: { m: mE, sd: sdE }, truth: thE,
+    tick: p => String(p), xTitle: 'ln[P/(1−P)]  ·  tick labels show the implied probability P' });
+  $('chO').innerHTML = densitySVG('O', { prior: { m: d.lnz, sd: st.so }, like: { m: rO, sd: st.nu }, post: { m: mO, sd: sdO }, truth: thO,
+    tick: p => money(y + p * (x - y)), xTitle: 'ln[(c−y)/(x−c)]  ·  tick labels show the sure amount c' });
+  $('roE').innerHTML =
+    `<div><span class="k-like">Signal</span> r<sub>e</sub> = ${f(rE)} <span class="mut">(true log-odds ${f(thE)}${st.noisy ? `, noise ${sg(st.nu * zE)}` : ', no noise shown'})</span></div>` +
+    `<div><span class="k-post">Posterior mean</span> = γ·r<sub>e</sub> + (1−γ)·ln ξ = ${f(d.g)}×(${f(rE)}) + ${f(1 - d.g)}×(${f(d.lnxi)}) = <b>${f(mE)}</b>, i.e. P̂ = ${f(expit(mE))} <span class="mut">vs. true P = ${f(st.P)}</span></div>` +
+    `<div class="mut">Prior mean ln ξ = ${f(d.lnxi)}. Weight on the signal γ = σ<sub>e</sub>²/(σ<sub>e</sub>²+ν²) = <b>${f(d.g)}</b>. Posterior sd ν√γ = ${f(sdE)} (likelihood sd ${f(st.nu)}, prior sd ${f(st.se)}).</div>`;
+  $('roO').innerHTML =
+    `<div><span class="k-like">Signal</span> r<sub>o</sub> = ${f(rO)} <span class="mut">(true log-ratio ${f(thO)}${st.noisy ? `, noise ${sg(st.nu * zO)}` : ', no noise shown'})</span></div>` +
+    `<div><span class="k-post">Posterior mean</span> = α·r<sub>o</sub> + (1−α)·ln ζ = ${f(d.a)}×(${f(rO)}) + ${f(1 - d.a)}×(${f(d.lnz)}) = <b>${f(mO)}</b></div>` +
+    `<div class="mut">Prior mean ln ζ = ${f(d.lnz)}. Weight on the signal α = σ<sub>o</sub>²/(σ<sub>o</sub>²+ν²) = <b>${f(d.a)}</b>. Posterior sd ν√α = ${f(sdO)} (likelihood sd ${f(st.nu)}, prior sd ${f(st.so)}).</div>`;
+
+  /* step 2 */
+  $('chC').innerHTML = choiceSVG(d);
+  const prA = prChoice(d, st.P, st.sc);
+  let cnt = 0;
+  for (let i = 0; i < NSIM; i++) {
+    const re = thE + st.nu * Z1[i], ro = thO + st.nu * Z2[i];
+    if (d.g * re + (1 - d.g) * d.lnxi > d.a * ro + (1 - d.a) * d.lnz) cnt++;
+  }
+  const gamble = mE > mO, cStar = y + expit((d.lnd + d.g * thE) / d.a) * (x - y), ev = st.P * x + (1 - st.P) * y;
+  $('ticket').innerHTML = `<ol>` +
+    `<li><b>Encode.</b> r<sub>e</sub> = ${f(rE)} for the odds, r<sub>o</sub> = ${f(rO)} for the cost–benefit ratio.</li>` +
+    `<li><b>Decode.</b> Posterior mean log-odds <span class="k-post">${f(mE)}</span> (P̂ = ${f(expit(mE))}); posterior mean log cost–benefit ratio <span class="k-post">${f(mO)}</span>.</li>` +
+    `<li><b>Compare.</b> ${f(mE)} ${gamble ? '&gt;' : '&lt;'} ${f(mO)}<br><span class="decision ${gamble ? 'k-gamble' : 'k-sure'}">→ ${gamble ? `takes the gamble (${money(x)} or ${money(y)})` : `takes the sure amount ${money(cur)}`}</span></li>` +
+    `<li><b>Across noise draws.</b> Pr(gamble) = Φ(index/ω) = Φ(${f((d.g * thE - d.a * thO + d.lnd) / d.om)}) = <b>${f(prA * 100, 1)}%</b><br><span class="mut">Simulating ${NSIM.toLocaleString('en-US')} noisy trials: ${f(cnt / NSIM * 100, 1)}%. Choice noise ω = ν√(γ²+α²) = ${f(d.om)}.</span></li>` +
+    `<li><b>Indifference.</b> c* = ${money(cStar)} against EV = ${money(ev)}: the model ${cStar < ev - 0.05 ? 'values the gamble below its expected value (risk averse here)' : cStar > ev + 0.05 ? 'values the gamble above its expected value (risk seeking here)' : 'values the gamble at about its expected value'}.</li></ol>`;
+  // choice list
+  let mpl = '', prev = null, swk = -1; const K = 9;
+  for (let k = 1; k <= K; k++) {
+    const sc = k / (K + 1), p = prChoice(d, st.P, sc), g = p >= .5, [r, gg, b] = probRGB(p);
+    if (prev === true && !g && swk < 0) swk = k;
+    prev = g;
+    mpl += `<div class="mplc" data-k="${k}" style="background:rgba(${r},${gg},${b},.32)"><span class="a">${money(y + sc * (x - y))}</span><span class="g ${g ? 'k-gamble' : 'k-sure'}">${g ? 'G' : 'S'}</span><span class="a">${Math.round(p * 100)}%</span></div>`;
+  }
+  $('mpl').innerHTML = mpl;
+  if (swk > 0) { $('mpl').children[swk - 1].classList.add('sw'); }
+  $('mplNote').innerHTML = 'G = gamble is the more likely choice, S = sure amount. ' + (swk > 0
+    ? `The list switches from G to S between ${money(y + (swk - 1) / (K + 1) * (x - y))} and ${money(y + swk / (K + 1) * (x - y))}, bracketing c* = ${money(cStar)}.`
+    : `No switch in this list: c* = ${money(cStar)} lies outside its range.`);
+
+  /* step 3 */
+  $('chD').innerHTML = mapSVG(d);
+  hookMap();
+  const piP = pwf(d, st.P), R = regionsOf(d);
+  let lg = `<span class="lg"><i style="background:var(--post)"></i>Weighting curve (current)</span>`;
+  lg += pins.map((p, i) => `<span class="lg"><i style="background:var(--pin${p.c})"></i>${p.label}<button type="button" data-i="${i}" aria-label="Remove pinned curve">×</button></span>`).join('');
+  lg += `<span class="lg"><i class="ink"></i>π(P) = P</span><span class="lg"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6" fill="#fff" stroke="var(--post)" stroke-width="2"/></svg>Indifference points found by bisection</span>`;
+  $('legD').innerHTML = lg;
+  $('roD').innerHTML =
+    `<div>At <b>P = ${f(st.P)}</b> the model is indifferent at c* = <b>${money(cStar)}</b>, so the decision weight is <span class="k-post">π(${f(st.P)}) = (c* − y)/(x − y) = ${f(piP, 3)}</span> <span class="mut">(π/P = ${f(piP / st.P)}: ${piP > st.P + .002 ? 'overweighted' : piP < st.P - .002 ? 'underweighted' : 'undistorted'})</span>.</div>` +
+    `<div class="mut" style="margin-top:6px">The white dots are found by searching the choice model for the 50% point at each P, as in a choice-list titration; the green curve is the closed form. They coincide.</div>`;
+  $('chipsD').innerHTML =
+    `<div class="chip">curvature γ/α = <b>${f(d.geG)}</b></div><div class="chip">elevation δ<sup>1/α</sup> = <b>${f(d.geD)}</b></div>` +
+    `<div class="chip">γ = ${f(d.g)}</div><div class="chip">α = ${f(d.a)}</div><div class="chip">δ = ${f(d.delta)}</div><div class="chip">ω = ${f(d.om)}</div>`;
+  let h = '';
+  if (!R) h = '<div>π(P) = P everywhere: no distortion.</div>';
+  else {
+    if (R.over.length) h += `<div><span class="k-sure">Overweights</span> (π &gt; P) for P ∈ ${R.over.join(' ∪ ')}</div>`;
+    if (R.under.length) h += `<div><span class="k-gamble">Underweights</span> (π &lt; P) for P ∈ ${R.under.join(' ∪ ')}</div>`;
+    if (R.cross.length) h += `<div class="mut">Fixed point${R.cross.length > 1 ? 's' : ''}: P ≈ ${R.cross.map(v => f(v)).join(', ')}${Math.abs(d.a - 1) < 0.02 ? '' : ' (equals ψ only if α = 1)'}</div>`;
+  }
+  $('regD').innerHTML = h;
+  const gg = clamp(d.geG, 0.1, 2.5), dd = clamp(d.geD, 0.1, 3);
+  $('mapD').innerHTML = `Because the sure amount is itself decoded through the outcome prior, the elicited curve is a Goldstein–Einhorn function with curvature <b>γ/α</b> and elevation <b>δ<sup>1/α</sup></b>. ` +
+    `<a class="inl" href="pwf-explorer.html#s=llo&amp;a=${gg.toFixed(2)}&amp;b=${dd.toFixed(2)}">Open these values in the weighting-function explorer</a>` +
+    (gg !== d.geG || dd !== d.geD ? ' <span class="mut">(clamped to its slider ranges)</span>' : '') + '.' +
+    '<div class="mut" style="margin-top:8px">The payoffs x and y only rescale the vertical axis: the curve depends on P through γ, α and δ, not on the payoff levels.</div>';
+
+  writeHash();
+}
+function writeHash() {
+  try {
+    const q = new URLSearchParams(); ['P', 'sc', 'psi', 'zeta', 'se', 'so', 'nu', 'x', 'y'].forEach(k => q.set(k, +(+st[k]).toFixed(3)));
+    q.set('tab', st.tab);
+    history.replaceState(null, '', '#' + q.toString());
+  } catch (e) { /* sandboxed iframe */ }
+}
+function initTabs() {
+  const tabs = [...document.querySelectorAll('.tab')];
+  const show = i => {
+    tabs.forEach((t, j) => { const on = i === j; t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1; $(t.getAttribute('aria-controls')).hidden = !on; });
+    st.tab = i; writeHash();
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => show(i));
+    t.addEventListener('keydown', e => {
+      const n = e.key === 'ArrowRight' ? (i + 1) % 3 : e.key === 'ArrowLeft' ? (i + 2) % 3 : e.key === 'Home' ? 0 : e.key === 'End' ? 2 : null;
+      if (n !== null) { e.preventDefault(); show(n); tabs[n].focus(); }
+    });
+  });
+  show(st.tab);
+}
+
+/* map interactions */
+function hookMap() {
+  const svg = $('chD'), cap = $('mcap'); if (!cap) return;
+  const pos = e => { const r = svg.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width * GW, py = (e.clientY - r.top) / r.height * GW;
+    return { P: clamp((px - GM.l) / GI, .01, .99), sc: clamp(1 - (py - GM.t) / GI, .01, .99) }; };
+  cap.addEventListener('pointermove', e => {
+    const { P, sc } = pos(e), d = derive(st), pr = prChoice(d, P, sc);
+    $('mh').style.display = ''; $('mhc').setAttribute('cx', GX(P)); $('mhc').setAttribute('cy', GY(sc));
+    $('hoverTip').innerHTML = `P = ${f(P)}, c = ${money(st.y + sc * (st.x - st.y))}: Pr(gamble) = <b>${f(pr * 100, 0)}%</b>`;
+  });
+  cap.addEventListener('pointerleave', () => { $('mh').style.display = 'none'; $('hoverTip').innerHTML = 'Hover over the map to read choice probabilities.'; });
+  cap.addEventListener('click', e => { const { P, sc } = pos(e); st.P = +P.toFixed(2); st.sc = +sc.toFixed(3); syncControls(); render(); });
+}
+
+/* ------------------------------------------------------------------ */
+/*  init                                                               */
+/* ------------------------------------------------------------------ */
+function init() {
+  buildControls();
+  const tip = document.createElement('div'); tip.id = 'hoverTip'; tip.className = 'readout mut'; tip.style.cssText = 'text-align:center;max-width:640px;margin:8px auto 0';
+  tip.textContent = 'Hover over the map to read choice probabilities.';
+  $('chD').parentNode.appendChild(tip);
+
+  $('reset').addEventListener('click', () => { Object.assign(st, DEFAULTS); syncControls(); render(); });
+  $('redraw').addEventListener('click', () => { const r = Math.random; st.z = [gauss(r), gauss(r)]; $('noisy').checked = st.noisy = true; render(); });
+  $('noisy').addEventListener('change', e => { st.noisy = e.target.checked; render(); });
+  $('pin').addEventListener('click', () => {
+    const d = derive(st);
+    if (pins.some(p => Math.abs(p.d.lnd - d.lnd) < 1e-9 && Math.abs(p.d.g - d.g) < 1e-9 && Math.abs(p.d.a - d.a) < 1e-9)) return;
+    if (pins.length >= 3) pins.shift();
+    const used = new Set(pins.map(p => p.c)); let c = 0; while (used.has(c)) c++;
+    pins.push({ d, c, label: `ν = ${f(st.nu)}: γ = ${f(d.g)}, α = ${f(d.a)}, δ = ${f(d.delta)}` });
+    render();
+  });
+  $('clear').addEventListener('click', () => { pins = []; render(); });
+  $('legD').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) { pins.splice(+b.dataset.i, 1); render(); } });
+
+  try {
+    const q = new URLSearchParams(location.hash.slice(1));
+    Object.keys(P_BY).forEach(k => { const v = parseFloat(q.get(k)); if (isFinite(v)) st[k] = clamp(v, P_BY[k].min, P_BY[k].max); });
+    if (st.x - st.y < 10) { st.x = DEFAULTS.x; st.y = DEFAULTS.y; }
+    const tb = parseInt(q.get('tab'), 10); if (tb >= 0 && tb <= 2) st.tab = tb;
+  } catch (e) { /* ignore */ }
+  syncControls(); render(); initTabs();
+}
+init();
+})();
+</script>
+</body>
+</html>
