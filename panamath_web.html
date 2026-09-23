@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dot Comparison Task (Panamath)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1c1c28;
+    color: #dde;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+  }
+  .screen.active { display: flex; }
+
+  /* ── Cards (intro / results) ── */
+  .card {
+    background: #252538;
+    border-radius: 14px;
+    padding: 38px 42px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.55);
+    max-width: 680px;
+    width: 100%;
+  }
+
+  h1 { font-size: 1.9rem; color: #fff; margin-bottom: 6px; }
+  h2 { font-size: 1.1rem; color: #8899bb; margin-bottom: 22px; font-weight: normal; }
+
+  p {
+    font-size: 0.97rem;
+    line-height: 1.75;
+    color: #bbc;
+    margin-bottom: 12px;
+  }
+
+  .key-y { color: #FFD700; font-weight: bold; }
+  .key-b { color: #7799ff; font-weight: bold; }
+
+  .btn-primary {
+    display: inline-block;
+    background: #3d7fd6;
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    padding: 13px 46px;
+    font-size: 1.05rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 22px;
+    transition: background 0.18s, transform 0.1s;
+    box-shadow: 0 4px 18px rgba(61,127,214,0.35);
+  }
+  .btn-primary:hover { background: #4d8fe6; transform: translateY(-2px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* ── Task screen ── */
+  #screen-task { gap: 14px; }
+
+  #task-header {
+    font-size: 0.88rem;
+    color: #556;
+    letter-spacing: 0.04em;
+    height: 20px;
+  }
+
+  #task-canvas {
+    display: block;
+    border-radius: 3px;
+    box-shadow: 0 6px 28px rgba(0,0,0,0.6);
+  }
+
+  #question-label {
+    font-size: 1rem;
+    color: #889;
+    height: 22px;
+    letter-spacing: 0.03em;
+  }
+
+  #response-area {
+    display: flex;
+    gap: 28px;
+    height: 54px;
+    align-items: center;
+  }
+
+  .resp-btn {
+    padding: 11px 42px;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.12s, opacity 0.18s;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+    opacity: 0;
+    pointer-events: none;
+    letter-spacing: 0.04em;
+  }
+  .resp-btn.visible { opacity: 1; pointer-events: all; }
+  .resp-btn:hover { transform: translateY(-2px); }
+  .resp-btn:active { transform: translateY(1px); }
+
+  #btn-yellow { background: #FFD700; color: #222; }
+  #btn-yellow:hover { background: #ffe840; }
+  #btn-blue   { background: #2255cc; color: #fff; }
+  #btn-blue:hover   { background: #3366dd; }
+
+  #feedback-text {
+    font-size: 1.2rem;
+    font-weight: bold;
+    height: 32px;
+    line-height: 32px;
+    letter-spacing: 0.03em;
+  }
+  .fb-correct   { color: #55dd77; }
+  .fb-incorrect { color: #ee5555; }
+
+  /* progress bar */
+  #progress-bar-container {
+    width: 640px;
+    max-width: 92vw;
+    height: 5px;
+    background: #2a2a40;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  #progress-bar {
+    height: 100%;
+    background: #3d7fd6;
+    border-radius: 3px;
+    transition: width 0.35s ease;
+    width: 0%;
+  }
+
+  /* ── Results ── */
+  #screen-results .card { max-width: 620px; }
+
+  .weber-label { color: #8899bb; font-size: 0.9rem; margin-bottom: 4px; text-align: center; }
+  .weber-value {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #4a90d9;
+    text-align: center;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .weber-interp {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #7799aa;
+    margin-bottom: 20px;
+  }
+
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid #2e2e48;
+    font-size: 0.92rem;
+  }
+  .rl { color: #889; }
+  .rv { color: #dde; font-weight: bold; }
+
+  #results-canvas {
+    display: block;
+    margin: 18px auto 0;
+    border-radius: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════ INTRO ════════════════ -->
+<div id="screen-intro" class="screen active">
+  <div class="card">
+    <h1>Dot Comparison Task</h1>
+    <h2>Approximate Number System (ANS) Test</h2>
+    <p>On each trial you will see a brief flash of <span class="key-y">yellow</span> and <span class="key-b">blue</span> dots displayed in two separate windows side by side.</p>
+    <p>Your task is to judge <strong>which color had more dots</strong>. The dots flash quickly — go with your first impression and do <em>not</em> try to count.</p>
+    <p>After the dots disappear, click the <span class="key-y">Yellow</span> or <span class="key-b">Blue</span> button to record your answer. You can also press the <strong>Y</strong> or <strong>B</strong> key on your keyboard.</p>
+    <p>There will be <strong>4 practice trials</strong> to get familiar, then <strong>40 test trials</strong>. Your ANS acuity (Weber fraction) will be calculated at the end.</p>
+    <button class="btn-primary" onclick="startPractice()">Begin Practice &rarr;</button>
+  </div>
+</div>
+
+<!-- ════════════════ TASK ════════════════ -->
+<div id="screen-task" class="screen">
+  <div id="task-header"></div>
+  <canvas id="task-canvas"></canvas>
+  <div id="question-label"></div>
+  <div id="response-area">
+    <button id="btn-yellow" class="resp-btn" onclick="respond('yellow')">Yellow &nbsp;[Y]</button>
+    <button id="btn-blue"   class="resp-btn" onclick="respond('blue')">Blue &nbsp;[B]</button>
+  </div>
+  <div id="feedback-text"></div>
+  <div id="progress-bar-container"><div id="progress-bar"></div></div>
+</div>
+
+<!-- ════════════════ TRANSITION ════════════════ -->
+<div id="screen-transition" class="screen">
+  <div class="card" style="text-align:center">
+    <h1>Practice Complete</h1>
+    <h2>You are now ready for the real task</h2>
+    <p>The task is identical to what you just practiced. Remember: judge which color has more dots and respond quickly — do not try to count.</p>
+    <p>There will be <strong>40 trials</strong> in total.</p>
+    <button class="btn-primary" onclick="beginTest()">Start &rarr;</button>
+  </div>
+</div>
+
+<!-- ════════════════ RESULTS ════════════════ -->
+<div id="screen-results" class="screen">
+  <div class="card">
+    <h1>Results</h1>
+    <div id="results-content"></div>
+    <canvas id="results-canvas" width="536" height="210"></canvas>
+    <button class="btn-primary" style="width:100%;text-align:center" onclick="restartTest()">Take Test Again</button>
+  </div>
+</div>
+
+<script>
+// ╔══════════════════════════════════════════════════════╗
+//   PANAMATH ANS TASK — Web Replication
+//   Yellow vs Blue dot windows · Weber fraction output
+// ╚══════════════════════════════════════════════════════╝
+
+// ── Config ──────────────────────────────────────────────
+const FLASH_MS      = 850;   // dot display duration
+const FIXATION_MS   = 500;   // fixation cross duration
+const BLANK_MS      = 150;   // post-flash blank before buttons appear
+const FEEDBACK_MS   = 650;   // feedback display duration
+const SHOW_FEEDBACK = true;  // ← set to false to suppress trial-by-trial feedback
+const ITI_MS        = 280;   // inter-trial interval after feedback
+
+const CW = 700, CH = 420;    // canvas pixels
+
+// Window layout (mirrors Panamath defaults)
+const MARGIN_LR  = 0.12;     // left & right margin as fraction of CW
+const MARGIN_TB  = 0.12;     // top & bottom margin as fraction of CH
+const WIN_W_FRAC = 0.43;     // each dot-window width as fraction of displayable width
+const GAP_FRAC   = 0.14;     // gap between windows as fraction of displayable width
+
+const DOT_AREA = 4800;       // total pixel² per color (area-controlled)
+
+// ── Trial lists ──────────────────────────────────────────
+// [nYellow, nBlue]  –  correct answer = whichever is larger
+const PRACTICE = [
+  [4, 12], [15, 5], [8, 12], [10, 5],
+];
+
+// 10 trials × 4 ratio bins = 40 test trials
+const TEST_TEMPLATE = [
+  // ratio ≈ 3.0 (easiest)
+  [4,12],[12,4],[5,15],[15,5],[6,18],[18,6],[4,12],[12,4],[5,15],[15,5],
+  // ratio ≈ 2.0
+  [6,12],[12,6],[7,14],[14,7],[8,16],[16,8],[6,12],[12,6],[7,14],[14,7],
+  // ratio ≈ 1.5
+  [8,12],[12,8],[10,15],[15,10],[12,18],[18,12],[8,12],[12,8],[10,15],[15,10],
+  // ratio ≈ 1.2 (hardest)
+  [10,12],[12,10],[10,12],[12,10],[12,14],[14,12],[10,12],[12,10],[12,14],[14,12],
+];
+
+// Bin membership for results (keyed by sorted pair string)
+const RATIO_BINS = [
+  { label: 'Ratio ≈ 3.0  (easy)',  ratio: 3.0,  keys: new Set(['4,12','5,15','6,18']) },
+  { label: 'Ratio ≈ 2.0',          ratio: 2.0,  keys: new Set(['6,12','7,14','8,16']) },
+  { label: 'Ratio ≈ 1.5',          ratio: 1.5,  keys: new Set(['8,12','10,15','12,18']) },
+  { label: 'Ratio ≈ 1.2  (hard)',  ratio: 1.2,  keys: new Set(['10,12','12,14']) },
+];
+
+function pairKey(a, b) { return Math.min(a,b) + ',' + Math.max(a,b); }
+
+// ── State ────────────────────────────────────────────────
+let canvas, ctx;
+let isPractice = false;
+let trialList  = [];
+let trialIdx   = 0;
+let testResults = [];      // test-phase only
+let currentTrial = null;
+let respondEnabled = false;
+
+// ── Maths ────────────────────────────────────────────────
+// Abramowitz & Stegun approximation of Φ(x)
+function Phi(x) {
+  const t  = 1 / (1 + 0.2315419 * Math.abs(x));
+  const p  = t * (0.319381530 + t * (-0.356563782 +
+               t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+  const pdf = Math.exp(-0.5*x*x) / Math.sqrt(2*Math.PI);
+  const cdf = 1 - pdf * p;
+  return x >= 0 ? cdf : 1 - cdf;
+}
+
+// MLE grid-search for Weber fraction
+// Model: P(correct) = Φ( ln(n_more/n_less) / (w√2) )
+function fitWeber(results) {
+  function ll(w) {
+    let s = 0;
+    for (const r of results) {
+      const ratio = Math.max(r.nY, r.nB) / Math.min(r.nY, r.nB);
+      let p = Phi(Math.log(ratio) / (w * Math.SQRT2));
+      p = Math.max(0.001, Math.min(0.999, p));
+      s += r.correct ? Math.log(p) : Math.log(1 - p);
+    }
+    return s;
+  }
+  let bestW = 0.5, bestLL = -Infinity;
+  for (let w = 0.02; w <= 2.5; w += 0.01) {
+    const v = ll(w);
+    if (v > bestLL) { bestLL = v; bestW = w; }
+  }
+  return +bestW.toFixed(3);
+}
+
+// ── Dot generation ───────────────────────────────────────
+// Produce n radii whose total π r² ≈ targetArea, with variation
+function genRadii(n, targetArea) {
+  const base = Math.sqrt(targetArea / (n * Math.PI));
+  const rs   = Array.from({length: n}, () => base * (0.58 + Math.random() * 0.84));
+  const got  = rs.reduce((s, r) => s + Math.PI * r * r, 0);
+  const sc   = Math.sqrt(targetArea / got);
+  return rs.map(r => Math.max(4.5, Math.min(24, r * sc)));
+}
+
+// Rejection-sampling: place all dots (both colors) into one shared area
+function placeDotsIntermixed(nY, nB, yRadii, bRadii, wx, wy, ww, wh) {
+  // Interleave items randomly so neither color gets first-pick advantage
+  const items = [
+    ...yRadii.map(r => ({ r, color: 'y' })),
+    ...bRadii.map(r => ({ r, color: 'b' })),
+  ];
+  shuffle(items);
+
+  const all = [], yDots = [], bDots = [];
+
+  for (const item of items) {
+    let r = item.r;
+    let placed = false;
+    for (let t = 0; t < 400; t++) {
+      const x = wx + r + 3 + Math.random() * (ww - 2*r - 6);
+      const y = wy + r + 3 + Math.random() * (wh - 2*r - 6);
+      if (!all.some(d => Math.hypot(x - d.x, y - d.y) < r + d.r + 2.5)) {
+        const dot = { x, y, r };
+        all.push(dot);
+        (item.color === 'y' ? yDots : bDots).push(dot);
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) {
+      r *= 0.6;
+      const dot = {
+        x: wx + r + Math.random() * (ww - 2*r),
+        y: wy + r + Math.random() * (wh - 2*r),
+        r,
+      };
+      all.push(dot);
+      (item.color === 'y' ? yDots : bDots).push(dot);
+    }
+  }
+  return { yDots, bDots };
+}
+
+// Build a full trial layout — single intermixed display area
+function buildTrial(nY, nB) {
+  const dX = CW * MARGIN_LR, dY = CH * MARGIN_TB;
+  const dW = CW * (1 - 2*MARGIN_LR), dH = CH * (1 - 2*MARGIN_TB);
+
+  const yRadii = genRadii(nY, DOT_AREA);
+  const bRadii = genRadii(nB, DOT_AREA);
+  const { yDots, bDots } = placeDotsIntermixed(nY, nB, yRadii, bRadii, dX, dY, dW, dH);
+
+  return { nY, nB, yDots, bDots };
+}
+
+// ── Drawing ──────────────────────────────────────────────
+const BG = '#6d6d6d';
+
+function clearCanvas(bg) {
+  ctx.fillStyle = bg || BG;
+  ctx.fillRect(0, 0, CW, CH);
+}
+
+function drawFixation() {
+  clearCanvas();
+  const cx = CW/2, cy = CH/2, s = 13;
+  ctx.strokeStyle = '#ddd';
+  ctx.lineWidth   = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(cx-s, cy); ctx.lineTo(cx+s, cy);
+  ctx.moveTo(cx, cy-s); ctx.lineTo(cx, cy+s);
+  ctx.stroke();
+}
+
+function drawTrial(t) {
+  clearCanvas();
+
+  // Draw all yellow dots
+  for (const d of t.yDots) {
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+    ctx.fillStyle   = '#FFD700'; ctx.fill();
+    ctx.strokeStyle = '#BB8800'; ctx.lineWidth = 1; ctx.stroke();
+  }
+
+  // Draw all blue dots
+  for (const d of t.bDots) {
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+    ctx.fillStyle   = '#2244CC'; ctx.fill();
+    ctx.strokeStyle = '#0011AA'; ctx.lineWidth = 1; ctx.stroke();
+  }
+}
+
+function drawBlank() { clearCanvas('#505050'); }
+
+// ── Trial sequencing ─────────────────────────────────────
+function runTrial(pair, onDone) {
+  const [nY, nB] = pair;
+  currentTrial          = buildTrial(nY, nB);
+  currentTrial._onDone  = onDone;
+  respondEnabled        = false;
+
+  setFeedback('');
+  setQuestion('');
+  hideButtons();
+
+  // 1 · Fixation
+  drawFixation();
+  setTimeout(() => {
+    // 2 · Dot flash
+    drawTrial(currentTrial);
+    setTimeout(() => {
+      // 3 · Blank
+      drawBlank();
+      setTimeout(() => {
+        // 4 · Response phase
+        setQuestion('Which color had more dots?');
+        showButtons();
+        respondEnabled = true;
+      }, BLANK_MS);
+    }, FLASH_MS);
+  }, FIXATION_MS);
+}
+
+function respond(color) {
+  if (!respondEnabled) return;
+  respondEnabled = false;
+  hideButtons();
+  setQuestion('');
+
+  const correct = (color === 'yellow') === (currentTrial.nY > currentTrial.nB);
+
+  if (!isPractice) {
+    testResults.push({ nY: currentTrial.nY, nB: currentTrial.nB, correct });
+  }
+
+  if (SHOW_FEEDBACK) setFeedback(correct ? '✓  Correct!' : '✗  Incorrect', correct);
+
+  setTimeout(() => {
+    setFeedback('');
+    currentTrial._onDone();
+  }, SHOW_FEEDBACK ? FEEDBACK_MS : 0);
+}
+
+function advanceTrial() {
+  trialIdx++;
+  updateUI();
+  if (trialIdx >= trialList.length) {
+    // Phase done
+    if (isPractice) startTest();
+    else            showResults();
+    return;
+  }
+  setTimeout(() => runTrial(trialList[trialIdx], advanceTrial), ITI_MS);
+}
+
+// ── UI helpers ───────────────────────────────────────────
+function showButtons() {
+  document.getElementById('btn-yellow').classList.add('visible');
+  document.getElementById('btn-blue').classList.add('visible');
+}
+function hideButtons() {
+  document.getElementById('btn-yellow').classList.remove('visible');
+  document.getElementById('btn-blue').classList.remove('visible');
+}
+function setFeedback(msg, correct) {
+  const el = document.getElementById('feedback-text');
+  el.textContent = msg;
+  el.className   = '';
+  if (correct === true)  el.classList.add('fb-correct');
+  if (correct === false) el.classList.add('fb-incorrect');
+}
+function setQuestion(msg) {
+  document.getElementById('question-label').textContent = msg;
+}
+function updateUI() {
+  const hdr  = document.getElementById('task-header');
+  const pbar = document.getElementById('progress-bar');
+  if (isPractice) {
+    hdr.textContent    = `Practice  ${trialIdx + 1} / ${trialList.length}`;
+    pbar.style.width   = '0%';
+  } else {
+    hdr.textContent    = `Trial  ${trialIdx + 1} / ${trialList.length}`;
+    pbar.style.width   = ((trialIdx / trialList.length) * 100) + '%';
+  }
+}
+
+// ── Phase control ─────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startPractice() {
+  isPractice  = true;
+  trialList   = [...PRACTICE];
+  trialIdx    = 0;
+  testResults = [];
+  showScreen('screen-task');
+  updateUI();
+  setTimeout(() => runTrial(trialList[0], advanceTrial), 400);
+}
+
+function startTest() {
+  isPractice = false;
+  trialList  = shuffle([...TEST_TEMPLATE]);
+  trialIdx   = 0;
+  showScreen('screen-transition');
+}
+
+function beginTest() {
+  showScreen('screen-task');
+  updateUI();
+  setTimeout(() => runTrial(trialList[0], advanceTrial), 400);
+}
+
+// ── Results ───────────────────────────────────────────────
+function showResults() {
+  showScreen('screen-results');
+
+  const w   = fitWeber(testResults);
+  const acc = testResults.filter(r => r.correct).length / testResults.length;
+
+  // Per-bin accuracy
+  const binData = RATIO_BINS.map(bin => {
+    const rel = testResults.filter(r => bin.keys.has(pairKey(r.nY, r.nB)));
+    const a   = rel.length ? rel.filter(r => r.correct).length / rel.length : null;
+    return { ...bin, acc: a, n: rel.length };
+  });
+
+  const interp =
+    w < 0.15 ? 'Excellent ANS acuity' :
+    w < 0.25 ? 'Good ANS acuity (above average)' :
+    w < 0.40 ? 'Average ANS acuity' :
+               'Below average ANS acuity';
+
+  document.getElementById('results-content').innerHTML = `
+    <p class="weber-label">Weber Fraction (w) — lower is better</p>
+    <div class="weber-value">${w.toFixed(3)}</div>
+    <p class="weber-interp">${interp}</p>
+    <div class="result-row">
+      <span class="rl">Overall accuracy</span>
+      <span class="rv">${(acc*100).toFixed(1)}%</span>
+    </div>
+    <div class="result-row">
+      <span class="rl">Total trials</span>
+      <span class="rv">${testResults.length}</span>
+    </div>
+    ${binData.map(b => `
+    <div class="result-row">
+      <span class="rl">${b.label}</span>
+      <span class="rv">${b.acc !== null ? (b.acc*100).toFixed(0)+'%' : '—'}
+        <span style="color:#556;font-weight:normal"> (n=${b.n})</span></span>
+    </div>`).join('')}
+  `;
+
+  drawPsychCurve(w, binData);
+}
+
+function drawPsychCurve(w, binData) {
+  const rc  = document.getElementById('results-canvas');
+  const rct = rc.getContext('2d');
+  const W = rc.width, H = rc.height;
+  const pad = { t: 18, r: 18, b: 38, l: 48 };
+  const pw  = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+
+  rct.fillStyle = '#1a1a2c';
+  rct.fillRect(0, 0, W, H);
+
+  // Grid + axes
+  rct.strokeStyle = '#2a2a44';
+  rct.lineWidth   = 1;
+  [0.5, 0.6, 0.7, 0.8, 0.9, 1.0].forEach(v => {
+    const y = pad.t + ph * (1 - (v - 0.5) / 0.5);
+    rct.beginPath(); rct.moveTo(pad.l, y); rct.lineTo(pad.l + pw, y); rct.stroke();
+    rct.fillStyle = '#556'; rct.font = '11px Arial'; rct.textAlign = 'right';
+    rct.fillText((v*100).toFixed(0)+'%', pad.l - 5, y + 4);
+  });
+
+  const xMin = 1.0, xMax = 3.5;
+  const toX = r => pad.l + (r - xMin) / (xMax - xMin) * pw;
+  const toY = p => pad.t + ph * (1 - (Math.min(p, 1) - 0.5) / 0.5);
+
+  [1.2, 1.5, 2.0, 2.5, 3.0].forEach(r => {
+    const x = toX(r);
+    rct.strokeStyle = '#2a2a44';
+    rct.beginPath(); rct.moveTo(x, pad.t); rct.lineTo(x, pad.t + ph + 4); rct.stroke();
+    rct.fillStyle = '#556'; rct.textAlign = 'center'; rct.font = '11px Arial';
+    rct.fillText(r.toFixed(1), x, pad.t + ph + 16);
+  });
+
+  // Axis labels
+  rct.fillStyle = '#778'; rct.font = '11px Arial';
+  rct.textAlign = 'center';
+  rct.fillText('Ratio (larger ÷ smaller)', pad.l + pw/2, H - 2);
+  rct.save();
+  rct.translate(11, pad.t + ph/2);
+  rct.rotate(-Math.PI/2);
+  rct.fillText('P(correct)', 0, 0);
+  rct.restore();
+
+  // Fitted psychometric curve
+  rct.strokeStyle = '#4a90d9'; rct.lineWidth = 2;
+  rct.beginPath();
+  let first = true;
+  for (let r = 1.01; r <= 3.5; r += 0.02) {
+    const p = Phi(Math.log(r) / (w * Math.SQRT2));
+    const x = toX(r), y = toY(p);
+    first ? rct.moveTo(x, y) : rct.lineTo(x, y);
+    first = false;
+  }
+  rct.stroke();
+
+  // Chance line
+  rct.strokeStyle = '#334'; rct.lineWidth = 1;
+  rct.setLineDash([4, 4]);
+  const yChance = toY(0.5);
+  rct.beginPath(); rct.moveTo(pad.l, yChance); rct.lineTo(pad.l+pw, yChance); rct.stroke();
+  rct.setLineDash([]);
+
+  // Data points
+  const rMap = { 3.0: 3.0, 2.0: 2.0, 1.5: 1.5, 1.2: 1.2 };
+  binData.forEach(b => {
+    if (b.acc === null) return;
+    const x = toX(b.ratio), y = toY(b.acc);
+    rct.beginPath(); rct.arc(x, y, 5.5, 0, Math.PI*2);
+    rct.fillStyle = '#FFD700'; rct.fill();
+    rct.strokeStyle = '#996600'; rct.lineWidth = 1; rct.stroke();
+  });
+
+  // Legend
+  rct.fillStyle = '#4a90d9'; rct.fillRect(pad.l+4, pad.t+6, 18, 2.5);
+  rct.fillStyle = '#778'; rct.font = '10px Arial'; rct.textAlign = 'left';
+  rct.fillText('Fitted curve  (w = ' + w.toFixed(3) + ')', pad.l+26, pad.t+12);
+  rct.beginPath(); rct.arc(pad.l+12, pad.t+24, 4.5, 0, Math.PI*2);
+  rct.fillStyle = '#FFD700'; rct.fill();
+  rct.strokeStyle = '#996600'; rct.lineWidth = 1; rct.stroke();
+  rct.fillStyle = '#778'; rct.fillText('Observed accuracy per ratio bin', pad.l+26, pad.t+28);
+}
+
+// ── Utilities ─────────────────────────────────────────────
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function restartTest() {
+  testResults = [];
+  showScreen('screen-intro');
+}
+
+// ── Keyboard shortcuts ────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (!respondEnabled) return;
+  if (e.key === 'y' || e.key === 'Y') respond('yellow');
+  if (e.key === 'b' || e.key === 'B') respond('blue');
+});
+
+// ── Init ──────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  canvas = document.getElementById('task-canvas');
+  canvas.width  = CW;
+  canvas.height = CH;
+  ctx = canvas.getContext('2d');
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, CW, CH);
+});
+</script>
+</body>
+</html>

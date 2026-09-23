@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Probability Weighting Function Explorer | Jilong Wu</title>
+<meta name="description" content="Interactive explorer of probability weighting functions: compare functional forms and see how curvature and elevation parameters change w(p).">
+<link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+<!-- Site-wide stylesheet (fonts, colours, cards, buttons); page-specific rules follow below -->
+<link rel="stylesheet" href="assets/css/main.css">
+<style>
+:root{
+  --grid:rgba(31,26,23,.08); --diag:#9a9186; --main:var(--accent);
+  --pin0:#c0562b; --pin1:#3b5f8a; --pin2:#b8891f; --pin3:#7a4a6b;
+  --over:#b4532a; --under:#3b5f8a; --warn-bg:#f7ecd6; --warn-ink:#7a5a1c;
+  --plot-bg:#fffdf8;
+}
+
+/* ---------- page layout (built on the site's .page-shell / .content-section) ---------- */
+.page-shell.pwf{grid-template-columns:minmax(310px,3fr) minmax(0,7fr);align-items:start}
+.pwf-head,.pwf-refs{grid-column:1 / -1}
+.pwf-controls{display:grid;gap:24px}
+.content-section.pwf-panel{padding:28px}
+.pwf-head .section-heading{margin-bottom:10px}
+.pwf-head .hero-text{font-size:1.2rem;max-width:80ch}
+.pwf .label{margin-bottom:14px}
+.pwf-plot .section-heading-inline{justify-content:space-between;align-items:center;flex-wrap:wrap}
+.pwf-plot .section-heading{margin-bottom:8px}
+@media (max-width:860px){
+  .page-shell.pwf{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .content-section.pwf-panel{padding:22px}
+  .pwf-plot .section-heading-inline{flex-direction:row}
+}
+
+/* ---------- specification ---------- */
+.pwf select{width:100%;font:inherit;font-size:1.05rem;padding:10px 14px;color:var(--text);
+  border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--panel-strong)}
+.pwf select:focus-visible,.pwf input:focus-visible,.pwf button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.formula{margin:16px 0 4px;padding:14px 16px;background:rgba(31,92,75,.06);border-radius:var(--radius-sm);
+  overflow-x:auto;font-size:1.3rem;line-height:1.5;white-space:nowrap}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .25em}
+.frac>span:first-child{border-bottom:1px solid currentColor;padding:0 .3em 2px}
+.frac>span:last-child{padding:2px .3em 0}
+sup{font-size:.72em;line-height:0}
+.cite{font-size:.95rem;color:var(--muted);margin-top:10px;font-style:italic}
+.note{font-size:.95rem;color:var(--muted);margin-top:6px}
+
+/* ---------- parameters ---------- */
+.param{padding:6px 0 2px;transition:opacity .15s}
+.param + .param{border-top:1px solid var(--line);margin-top:14px;padding-top:16px}
+.param-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.param-head label{font-weight:600;font-size:1.05rem}
+.sym{display:inline-block;min-width:1.5em;font-style:italic;font-size:1.25rem;color:var(--accent)}
+.param input[type=number]{width:5.6em;font:inherit;text-align:right;padding:5px 10px;color:var(--text);
+  border:1px solid var(--line);border-radius:10px;background:var(--panel-strong)}
+.param input[type=range]{width:100%;accent-color:var(--accent);margin:2px 0}
+.hint{font-size:.95rem;line-height:1.5;color:var(--muted);margin:2px 0 8px}
+.param.frozen{opacity:.5}
+.param.frozen .sym{color:var(--muted)}
+.frozen-tag{display:none;font-size:.68rem;text-transform:uppercase;letter-spacing:.14em;font-weight:700;
+  border:1px solid var(--line);border-radius:999px;padding:1px 9px;margin-left:10px;color:var(--muted);vertical-align:middle}
+.param.frozen .frozen-tag{display:inline-block}
+.linkbtn{background:none;border:none;color:var(--accent);font:inherit;padding:8px 0 0;cursor:pointer;
+  text-decoration:underline;text-underline-offset:.12em}
+
+/* ---------- buttons (reuse the site's pill .button) ---------- */
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.pwf .button{font-family:inherit;color:var(--text);cursor:pointer;min-height:40px;padding:0 18px}
+.pwf .button-primary{color:#f8f6ef}
+
+/* ---------- chart ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:1rem;margin:4px 0 8px}
+.lg{display:inline-flex;align-items:center;gap:7px}
+.lg i{display:inline-block;width:20px;height:3px;border-radius:2px}
+.lg i.dash{height:0;border-top:2px dashed var(--diag);background:none}
+.lg button{border:none;background:none;color:var(--muted);cursor:pointer;font:inherit;font-size:1.2rem;line-height:1;padding:0 2px}
+.lg button:hover{color:var(--text)}
+svg#plot{display:block;width:100%;height:auto;max-width:720px;margin:0 auto;touch-action:pan-y;user-select:none}
+svg text{fill:var(--muted);font-size:13px;font-family:inherit}
+svg .plotbg{fill:var(--plot-bg);stroke:var(--line);stroke-width:1}
+svg .gridline{stroke:var(--grid);stroke-width:1}
+svg .diag{stroke:var(--diag);stroke-width:1.4;stroke-dasharray:5 5}
+svg .curve{fill:none;stroke:currentColor;stroke-width:3.2;stroke-linejoin:round;stroke-linecap:round}
+svg .pinned .curve{stroke-width:2.4;opacity:.92}
+svg .jump{stroke:currentColor;stroke-width:1.5;stroke-dasharray:3 3;opacity:.7}
+svg .dot-f{fill:currentColor;stroke:currentColor;stroke-width:1.5}
+svg .dot-o{fill:var(--plot-bg);stroke:currentColor;stroke-width:2}
+svg .hl{stroke:var(--muted);stroke-width:1;stroke-dasharray:2 3}
+svg .hc{fill:var(--accent);stroke:var(--plot-bg);stroke-width:2}
+svg .hd{fill:var(--diag);stroke:var(--plot-bg);stroke-width:1.5}
+.readout{min-height:1.8em;text-align:center;font-variant-numeric:tabular-nums;margin:4px 0 10px;font-size:1.1rem}
+.readout.idle{color:var(--muted)}
+.warn{display:none;background:var(--warn-bg);color:var(--warn-ink);border-radius:var(--radius-sm);padding:10px 14px;font-size:1rem;margin:6px 0 12px}
+.warn.show{display:block}
+.regions{font-size:1.05rem;margin:10px 0 16px;padding-top:14px;border-top:1px solid var(--line)}
+.regions div{margin:2px 0}
+.tag-over{color:var(--over);font-weight:600}
+.tag-under{color:var(--under);font-weight:600}
+.chips-title{margin:0 0 10px}
+.chips{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:8px}
+@media (max-width:640px){.chips{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.chip{border:1px solid var(--line);border-radius:var(--radius-sm);padding:6px 4px;text-align:center;
+  font-variant-numeric:tabular-nums;background:var(--panel-strong)}
+.chip .cp{display:block;font-size:.82rem;color:var(--muted)}
+.chip .cw{display:block;font-weight:700;font-size:1.05rem}
+.chip.over .cw{color:var(--over)}
+.chip.under .cw{color:var(--under)}
+.pwf-refs{color:var(--muted);font-size:.95rem;padding:0 6px;max-width:110ch}
+noscript{display:block;padding:12px;background:var(--warn-bg);color:var(--warn-ink);border-radius:var(--radius-sm)}
+</style>
+</head>
+<body>
+<div class="page-shell pwf">
+
+  <header class="content-section pwf-head">
+    <div class="section-heading section-heading-inline">
+      <div><h3>Probability Weighting Function Explorer</h3></div>
+      <a class="hero-link" href="index.html#resources">Back to homepage</a>
+    </div>
+    <p class="hero-text">Choose a functional form, then move the parameters to see how the weighting function <em>w</em>(<em>p</em>) bends. The dashed diagonal is <em>w</em>(<em>p</em>) = <em>p</em>, i.e. no distortion of probabilities.</p>
+    <noscript>This page needs JavaScript to draw the curves.</noscript>
+  </header>
+
+  <!-- LEFT: specification + parameters -->
+  <div class="pwf-controls">
+    <section class="content-section pwf-panel" aria-labelledby="h-spec">
+      <p class="label" id="h-spec">Function specification</p>
+      <select id="spec" aria-label="Function specification"></select>
+      <div class="formula" id="formula" aria-live="polite"></div>
+      <p class="cite" id="cite"></p>
+      <p class="note" id="specnote"></p>
+    </section>
+
+    <section class="content-section pwf-panel" aria-labelledby="h-par">
+      <p class="label" id="h-par">Parameters</p>
+
+      <div class="param" id="blk0">
+        <div class="param-head">
+          <label for="s0"><span class="sym" id="sym0"></span><span id="name0"></span></label>
+          <input type="number" id="n0" aria-label="Curvature parameter value">
+        </div>
+        <input type="range" id="s0">
+        <div class="hint" id="hint0"></div>
+      </div>
+
+      <div class="param" id="blk1">
+        <div class="param-head">
+          <label for="s1"><span class="sym" id="sym1"></span><span id="name1"></span><span class="frozen-tag">frozen</span></label>
+          <input type="number" id="n1" aria-label="Elevation parameter value">
+        </div>
+        <input type="range" id="s1">
+        <div class="hint" id="hint1"></div>
+      </div>
+
+      <button class="linkbtn" id="reset" type="button">Reset to default values</button>
+    </section>
+  </div>
+
+  <!-- RIGHT: plot -->
+  <section class="content-section pwf-panel pwf-plot" aria-labelledby="h-plot">
+    <div class="section-heading section-heading-inline">
+      <div><h3 id="h-plot">Weighting function</h3></div>
+      <div class="btns">
+        <button class="button button-primary" id="pin" type="button" title="Keep this curve on the plot to compare with others">Pin this curve</button>
+        <button class="button" id="clear" type="button">Clear pins</button>
+      </div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <svg id="plot" viewBox="0 0 560 560" role="img" aria-label="Plot of the probability weighting function w(p) against probability p"></svg>
+    <div class="readout idle" id="readout">Hover over (or touch) the plot to read off w(p).</div>
+    <div class="warn" id="warn"></div>
+    <div class="regions" id="regions"></div>
+    <p class="label chips-title">Decision weight at selected probabilities
+      <span class="tag-over" style="letter-spacing:.06em;text-transform:none;font-weight:600">overweighted</span>
+      <span class="tag-under" style="letter-spacing:.06em;text-transform:none;font-weight:600">underweighted</span></p>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <p class="pwf-refs">
+    Sources: Tversky &amp; Kahneman (1992); Karmarkar (1978); Prelec (1998); Goldstein &amp; Einhorn (1987) and Lattimore, Baker &amp; Witte (1992), estimated in Gonzalez &amp; Wu (1999); Chateauneuf, Eichberger &amp; Grant (2007).
+    Default parameter values are illustrative, chosen near commonly reported estimates; they are not a substitute for the original papers.
+  </p>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+const $ = id => document.getElementById(id);
+const fmt = (x, d = 3) => Number(x).toFixed(d);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+
+/* ------------------------------------------------------------------ */
+/*  Specifications                                                     */
+/* ------------------------------------------------------------------ */
+const SPECS = {
+  tk92: {
+    short: 'Tversky–Kahneman', name: 'Tversky–Kahneman (1992)', group: 'One parameter',
+    cite: 'Tversky & Kahneman (1992), J. Risk Uncertainty',
+    formula: 'w(p) = <span class="frac"><span>p<sup>γ</sup></span><span>[p<sup>γ</sup> + (1−p)<sup>γ</sup>]<sup>1/γ</sup></span></span>',
+    note: 'Not monotonic for γ below roughly 0.28.',
+    params: [{ sym: 'γ', name: 'Curvature', min: 0.2, max: 2, step: 0.01, def: 0.61,
+      hint: 'γ = 1 is linear. Smaller γ gives a stronger inverse-S: small probabilities overweighted, moderate and large ones underweighted. γ > 1 gives an S-shape.' }],
+    f: (p, g) => { const pg = Math.pow(p, g); return pg / Math.pow(pg + Math.pow(1 - p, g), 1 / g); }
+  },
+  prelec1: {
+    short: 'Prelec I', name: 'Prelec (1998), one-parameter', group: 'One parameter',
+    cite: 'Prelec (1998), Econometrica',
+    formula: 'w(p) = exp(−(−ln p)<sup>α</sup>)',
+    note: 'The fixed point w(p) = p is always at p = 1/e ≈ 0.368.',
+    params: [{ sym: 'α', name: 'Curvature', min: 0.1, max: 2, step: 0.01, def: 0.65,
+      hint: 'α = 1 is linear. Smaller α means stronger likelihood insensitivity (more inverse-S).' }],
+    f: (p, a) => p <= 0 ? 0 : p >= 1 ? 1 : Math.exp(-Math.pow(-Math.log(p), a))
+  },
+  karmarkar: {
+    short: 'Karmarkar', name: 'Karmarkar (1978)', group: 'One parameter',
+    cite: 'Karmarkar (1978); equals Goldstein–Einhorn with δ = 1',
+    formula: 'w(p) = <span class="frac"><span>p<sup>γ</sup></span><span>p<sup>γ</sup> + (1−p)<sup>γ</sup></span></span>',
+    note: 'Symmetric around p = 0.5: w(p) + w(1−p) = 1, with fixed point at 0.5.',
+    params: [{ sym: 'γ', name: 'Curvature', min: 0.1, max: 2.5, step: 0.01, def: 0.6,
+      hint: 'γ = 1 is linear. γ < 1 inverse-S, γ > 1 S-shaped.' }],
+    f: (p, g) => { const pg = Math.pow(p, g); return pg / (pg + Math.pow(1 - p, g)); }
+  },
+  llo: {
+    short: 'GE / LLO', name: 'Goldstein–Einhorn / Gonzalez–Wu (linear in log odds)', group: 'Two parameters',
+    cite: 'Goldstein & Einhorn (1987); Lattimore et al. (1992); Gonzalez & Wu (1999)',
+    formula: 'w(p) = <span class="frac"><span>δ p<sup>γ</sup></span><span>δ p<sup>γ</sup> + (1−p)<sup>γ</sup></span></span>',
+    note: 'Linear in log odds: ln[w/(1−w)] = ln δ + γ ln[p/(1−p)].',
+    params: [
+      { sym: 'γ', name: 'Curvature (discriminability)', min: 0.1, max: 2.5, step: 0.01, def: 0.44,
+        hint: 'Slope in log-odds space. γ < 1 inverse-S, γ = 1 no curvature, γ > 1 S-shaped.' },
+      { sym: 'δ', name: 'Elevation (attractiveness)', min: 0.1, max: 3, step: 0.01, def: 0.77,
+        hint: 'Larger δ lifts the whole curve (more optimistic weighting); smaller δ lowers it.' }
+    ],
+    f: (p, g, d) => { const pg = d * Math.pow(p, g); return pg / (pg + Math.pow(1 - p, g)); }
+  },
+  prelec2: {
+    short: 'Prelec II', name: 'Prelec (1998), two-parameter', group: 'Two parameters',
+    cite: 'Prelec (1998), Econometrica',
+    formula: 'w(p) = exp(−β(−ln p)<sup>α</sup>)',
+    note: 'β = 1 reduces to the one-parameter Prelec function.',
+    params: [
+      { sym: 'α', name: 'Curvature', min: 0.1, max: 2.5, step: 0.01, def: 0.65,
+        hint: 'α = 1 is no curvature. Smaller α: stronger inverse-S.' },
+      { sym: 'β', name: 'Elevation', min: 0.2, max: 3, step: 0.01, def: 1,
+        hint: 'Careful with the direction: a larger β lowers the curve (more pessimistic), a smaller β raises it.' }
+    ],
+    f: (p, a, b) => p <= 0 ? 0 : p >= 1 ? 1 : Math.exp(-b * Math.pow(-Math.log(p), a))
+  },
+  neo: {
+    short: 'Neo-additive', name: 'Neo-additive (Chateauneuf–Eichberger–Grant 2007)', group: 'Two parameters',
+    cite: 'Chateauneuf, Eichberger & Grant (2007), J. Econ. Theory',
+    formula: 'w(p) = δ + s·p, &nbsp;0 &lt; p &lt; 1<br>w(0) = 0, &nbsp;w(1) = 1',
+    note: 'Discontinuous at 0 and 1: open circles mark the limits, filled circles the actual values. Requires δ + s ≤ 1, so the upper limit of δ moves with s.',
+    disc: true,
+    params: [
+      { sym: 's', name: 'Sensitivity', min: 0, max: 1, step: 0.01, def: 0.5,
+        hint: 'Slope in the interior. s = 1 (with δ = 0) is linear; smaller s means a flatter middle and larger jumps at 0 and 1 (likelihood insensitivity).' },
+      { sym: 'δ', name: 'Elevation (optimism)', min: 0, max: 1, step: 0.01, def: 0.25,
+        maxFn: v => Math.round((1 - v[0]) * 100) / 100,
+        hint: 'Size of the jump at p = 0. The jump at p = 1 is 1 − δ − s. Upper limit is 1 − s.' }
+    ],
+    f: (p, s, d) => d + s * p
+  }
+};
+const ORDER = ['tk92', 'prelec1', 'karmarkar', 'llo', 'prelec2', 'neo'];
+
+/* ------------------------------------------------------------------ */
+/*  State                                                              */
+/* ------------------------------------------------------------------ */
+const state = { spec: 'tk92', v: [0.61, NaN] };
+let pins = [];
+
+/* ------------------------------------------------------------------ */
+/*  Plot skeleton                                                      */
+/* ------------------------------------------------------------------ */
+const W = 560, M = { l: 60, r: 20, t: 20, b: 60 }, IW = W - M.l - M.r; // square plot area
+const X = p => M.l + p * IW;
+const Y = w => M.t + (1 - w) * IW;
+
+function buildSkeleton() {
+  let s = `<rect class="plotbg" x="${X(0)}" y="${Y(1)}" width="${IW}" height="${IW}"/>`;
+  for (let i = 0; i <= 5; i++) {
+    const t = i / 5, lab = t === 0 ? '0' : t === 1 ? '1' : t.toFixed(1);
+    s += `<line class="gridline" x1="${X(t)}" y1="${Y(0)}" x2="${X(t)}" y2="${Y(1)}"/>`;
+    s += `<line class="gridline" x1="${X(0)}" y1="${Y(t)}" x2="${X(1)}" y2="${Y(t)}"/>`;
+    s += `<text x="${X(t)}" y="${Y(0) + 19}" text-anchor="middle">${lab}</text>`;
+    s += `<text x="${X(0) - 10}" y="${Y(t) + 4}" text-anchor="end">${lab}</text>`;
+  }
+  s += `<line class="diag" x1="${X(0)}" y1="${Y(0)}" x2="${X(1)}" y2="${Y(1)}"/>`;
+  s += `<g id="pins"></g><g id="main"></g>`;
+  s += `<g id="hover" style="display:none"><line class="hl" id="hl" y1="${Y(1)}" y2="${Y(0)}"/>
+        <circle class="hd" id="hd" r="4"/><circle class="hc" id="hc" r="5.5"/></g>`;
+  s += `<text x="${X(0.5)}" y="${W - 14}" text-anchor="middle" style="font-size:15px">Objective probability, p</text>`;
+  s += `<text transform="translate(16 ${Y(0.5)}) rotate(-90)" text-anchor="middle" style="font-size:15px">Decision weight, w(p)</text>`;
+  s += `<rect id="cap" x="${X(0)}" y="${Y(1)}" width="${IW}" height="${IW}" fill="transparent" style="cursor:crosshair"/>`;
+  $('plot').innerHTML = s;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Curve computation and drawing                                      */
+/* ------------------------------------------------------------------ */
+const wAt = (S, p, a, b) => {
+  if (!S.disc) { if (p <= 0) return 0; if (p >= 1) return 1; }
+  return S.f(p, a, b);
+};
+
+function samples(S, a, b) {
+  const N = 320, out = [];
+  for (let i = 0; i <= N; i++) {            // denser near both ends
+    const p = 0.5 - 0.5 * Math.cos(Math.PI * i / N);
+    const w = S.disc ? S.f(p, a, b) : wAt(S, p, a, b);
+    if (isFinite(w)) out.push([p, w]);
+  }
+  return out;
+}
+
+function curveMarkup(S, a, b, color, cls) {
+  const pts = samples(S, a, b);
+  const d = pts.map((q, i) => (i ? 'L' : 'M') + X(q[0]).toFixed(1) + ' ' + Y(q[1]).toFixed(1)).join('');
+  let g = `<g class="${cls}" style="color:${color}"><path class="curve" d="${d}"/>`;
+  if (S.disc) {
+    const w0 = S.f(0, a, b), w1 = S.f(1, a, b);
+    g += `<line class="jump" x1="${X(0)}" y1="${Y(0)}" x2="${X(0)}" y2="${Y(w0)}"/>`;
+    g += `<line class="jump" x1="${X(1)}" y1="${Y(w1)}" x2="${X(1)}" y2="${Y(1)}"/>`;
+    g += `<circle class="dot-f" cx="${X(0)}" cy="${Y(0)}" r="4"/><circle class="dot-f" cx="${X(1)}" cy="${Y(1)}" r="4"/>`;
+    g += `<circle class="dot-o" cx="${X(0)}" cy="${Y(w0)}" r="4"/><circle class="dot-o" cx="${X(1)}" cy="${Y(w1)}" r="4"/>`;
+  }
+  return g + '</g>';
+}
+
+function label(id, v) {
+  const S = SPECS[id];
+  return `${S.short}: ` + S.params.map((P, i) => `${P.sym} = ${fmt(v[i], 2)}`).join(', ');
+}
+
+/* where does the curve lie above / below the diagonal? */
+function regions(S, a, b) {
+  const N = 1000, eps = 1e-6;
+  let last = null, sign0 = 0; const cross = [];
+  for (let k = 1; k < N; k++) {
+    const p = k / N, d = wAt(S, p, a, b) - p, sg = d > eps ? 1 : d < -eps ? -1 : 0;
+    if (!sg) continue;
+    if (last === null) sign0 = sg;
+    else if (sg !== last.sg) cross.push(last.p + (0 - last.d) * (p - last.p) / (d - last.d));
+    last = { p, d, sg };
+  }
+  if (last === null) return null;
+  const over = [], under = [];
+  const bounds = [0, ...cross, 1];
+  bounds.slice(0, -1).forEach((lo, i) => {
+    const sg = sign0 * (i % 2 ? -1 : 1), iv = `(${fmt(lo, 2)}, ${fmt(bounds[i + 1], 2)})`;
+    (sg > 0 ? over : under).push(iv);
+  });
+  return { over, under };
+}
+
+function isMonotone(S, a, b) {
+  const pts = samples(S, a, b);
+  for (let i = 1; i < pts.length; i++) if (pts[i][1] < pts[i - 1][1] - 1e-9) return false;
+  return true;
+}
+
+function draw() {
+  const S = SPECS[state.spec], [a, b] = state.v;
+
+  $('main').innerHTML = curveMarkup(S, a, b, 'var(--main)', 'current');
+  $('pins').innerHTML = pins.map(p =>
+    curveMarkup(SPECS[p.spec], p.v[0], p.v[1], `var(--pin${p.c})`, 'pinned')).join('');
+
+  // legend
+  let lg = `<span class="lg"><i style="background:var(--main)"></i>Current: ${label(state.spec, state.v)}</span>`;
+  lg += pins.map((p, i) => `<span class="lg"><i style="background:var(--pin${p.c})"></i>${label(p.spec, p.v)}<button type="button" data-i="${i}" aria-label="Remove pinned curve">×</button></span>`).join('');
+  lg += `<span class="lg"><i class="dash"></i>w(p) = p</span>`;
+  $('legend').innerHTML = lg;
+
+  // warnings
+  const warn = $('warn');
+  if (!isMonotone(S, a, b)) {
+    warn.textContent = 'This parameter combination gives a non-monotonic w(p): the weight falls as probability rises, which is normally ruled out.';
+    warn.classList.add('show');
+  } else warn.classList.remove('show');
+
+  // regions
+  const R = regions(S, a, b), rg = $('regions');
+  if (!R) rg.innerHTML = '<div>w(p) = p everywhere: no distortion (expected-utility weighting).</div>';
+  else {
+    let h = '';
+    if (R.over.length) h += `<div><span class="tag-over">Overweights</span> (w &gt; p) for p ∈ ${R.over.join(' ∪ ')}</div>`;
+    if (R.under.length) h += `<div><span class="tag-under">Underweights</span> (w &lt; p) for p ∈ ${R.under.join(' ∪ ')}</div>`;
+    rg.innerHTML = h;
+  }
+
+  // chips
+  $('chips').innerHTML = [0.01, 0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99].map(p => {
+    const w = wAt(S, p, a, b), cls = w > p + 1e-9 ? 'over' : w < p - 1e-9 ? 'under' : '';
+    return `<div class="chip ${cls}"><span class="cp">p = ${p}</span><span class="cw">${fmt(w, 3)}</span></div>`;
+  }).join('');
+
+  // shareable hash
+  try {
+    const q = new URLSearchParams({ s: state.spec, a: fmt(a, 2) });
+    if (S.params.length > 1) q.set('b', fmt(b, 2));
+    history.replaceState(null, '', '#' + q.toString());
+  } catch (e) { /* ignore (e.g. sandboxed iframe) */ }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Control panel                                                      */
+/* ------------------------------------------------------------------ */
+function syncUI(skipNumber = -1) {
+  const S = SPECS[state.spec];
+  $('formula').innerHTML = S.formula;
+  $('cite').textContent = S.cite;
+  $('specnote').textContent = S.note || '';
+  for (let i = 0; i < 2; i++) {
+    const P = S.params[i], blk = $('blk' + i), s = $('s' + i), n = $('n' + i);
+    if (!P) {                                  // frozen slot
+      blk.classList.add('frozen');
+      s.disabled = n.disabled = true;
+      s.min = 0; s.max = 1; s.step = 0.01; s.value = 0.5; n.value = '';
+      n.placeholder = '–';
+      $('sym' + i).textContent = '–';
+      $('name' + i).textContent = ' Elevation';
+      $('hint' + i).textContent = 'Frozen: this one-parameter specification has no separate elevation parameter.';
+      continue;
+    }
+    blk.classList.remove('frozen');
+    s.disabled = n.disabled = false;
+    const max = P.maxFn ? P.maxFn(state.v) : P.max;
+    if (state.v[i] > max) state.v[i] = max;
+    s.min = n.min = P.min; s.max = n.max = max; s.step = n.step = P.step;
+    s.value = state.v[i];
+    if (i !== skipNumber) n.value = fmt(state.v[i], 2);
+    $('sym' + i).textContent = P.sym;
+    $('name' + i).textContent = ' ' + P.name;
+    $('hint' + i).textContent = P.hint;
+  }
+}
+
+function applySpec(id, vals) {
+  const S = SPECS[id];
+  state.spec = id;
+  state.v = S.params.map((P, i) => vals && isFinite(vals[i]) ? clamp(vals[i], P.min, P.max) : P.def);
+  state.v.length = 2; if (S.params.length < 2) state.v[1] = NaN;
+  $('spec').value = id;
+  syncUI(); draw();
+}
+
+function onParam(i, value, fromNumber) {
+  const P = SPECS[state.spec].params[i];
+  if (!P || !isFinite(value)) return;
+  const max = P.maxFn ? P.maxFn(state.v) : P.max;
+  state.v[i] = clamp(value, P.min, max);
+  syncUI(fromNumber ? i : -1); draw();
+}
+
+function init() {
+  // spec dropdown with option groups
+  const groups = {};
+  ORDER.forEach(id => (groups[SPECS[id].group] = groups[SPECS[id].group] || []).push(id));
+  $('spec').innerHTML = Object.keys(groups).map(g =>
+    `<optgroup label="${g}">` + groups[g].map(id => `<option value="${id}">${SPECS[id].name}</option>`).join('') + '</optgroup>').join('');
+
+  buildSkeleton();
+
+  $('spec').addEventListener('change', e => applySpec(e.target.value));
+  [0, 1].forEach(i => {
+    $('s' + i).addEventListener('input', e => onParam(i, parseFloat(e.target.value), false));
+    $('n' + i).addEventListener('input', e => {
+      const v = parseFloat(e.target.value), P = SPECS[state.spec].params[i];
+      if (!P || !isFinite(v)) return;
+      const max = P.maxFn ? P.maxFn(state.v) : P.max;
+      if (v >= P.min && v <= max) onParam(i, v, true);
+    });
+    $('n' + i).addEventListener('change', e => { onParam(i, parseFloat(e.target.value), false); syncUI(); });
+  });
+  $('reset').addEventListener('click', () => applySpec(state.spec));
+
+  $('pin').addEventListener('click', () => {
+    const dup = pins.some(p => p.spec === state.spec && p.v[0] === state.v[0] && p.v[1] === state.v[1]);
+    if (dup) return;
+    if (pins.length >= 4) pins.shift();
+    const used = new Set(pins.map(p => p.c)); let c = 0; while (used.has(c)) c++;
+    pins.push({ spec: state.spec, v: state.v.slice(), c });
+    draw();
+  });
+  $('clear').addEventListener('click', () => { pins = []; draw(); });
+  $('legend').addEventListener('click', e => {
+    const b = e.target.closest('button[data-i]');
+    if (b) { pins.splice(+b.dataset.i, 1); draw(); }
+  });
+
+  // hover read-out
+  const svg = $('plot'), hover = $('hover'), ro = $('readout');
+  const idle = 'Hover over (or touch) the plot to read off w(p).';
+  function move(e) {
+    const r = svg.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width * W;
+    const p = clamp((px - M.l) / IW, 0, 1);
+    const S = SPECS[state.spec], [a, b] = state.v, w = wAt(S, p, a, b);
+    $('hl').setAttribute('x1', X(p)); $('hl').setAttribute('x2', X(p));
+    $('hc').setAttribute('cx', X(p)); $('hc').setAttribute('cy', Y(w));
+    $('hd').setAttribute('cx', X(p)); $('hd').setAttribute('cy', Y(p));
+    hover.style.display = '';
+    ro.classList.remove('idle');
+    ro.innerHTML = `p = ${fmt(p, 3)} &nbsp;→&nbsp; w(p) = <strong>${fmt(w, 3)}</strong>` +
+      (p > 0.0005 ? ` &nbsp;(w/p = ${fmt(w / p, 2)})` : '');
+  }
+  function leave() { hover.style.display = 'none'; ro.classList.add('idle'); ro.textContent = idle; }
+  svg.addEventListener('pointermove', move);
+  svg.addEventListener('pointerdown', move);
+  svg.addEventListener('pointerleave', leave);
+
+  // initial state, optionally from URL hash
+  let id = 'tk92', vals = null;
+  try {
+    const q = new URLSearchParams(location.hash.slice(1));
+    if (SPECS[q.get('s')]) { id = q.get('s'); vals = [parseFloat(q.get('a')), parseFloat(q.get('b'))]; }
+  } catch (e) { /* ignore */ }
+  applySpec(id, vals);
+}
+
+init();
+})();
+</script>
+</body>
+</html>
