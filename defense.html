@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>JW Defense</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #faf9f5;
+    --surface: #ffffff;
+    --surface-2: #f3f1ea;
+    --border: #e2ded2;
+    --text: #201d17;
+    --text-muted: #6b6558;
+    --text-faint: #a29c8c;
+    --mono-bg: #f1efe6;
+    --shadow: 0 1px 2px rgba(32,29,23,0.04), 0 4px 16px rgba(32,29,23,0.05);
+
+    --intro: #2c4a6e;    --intro-soft: #e7eef4;
+    --c2:    #1b6b64;    --c2-soft:    #e4f1ee;
+    --c3:    #7a2e3a;    --c3-soft:    #f5e9ea;
+    --c4:    #5c4b7a;    --c4-soft:    #efeaf4;
+    --c5:    #a1522f;    --c5-soft:    #f5e6dc;
+    --disc:  #8a6420;    --disc-soft:  #f5eedf;
+
+    --accent: var(--intro);
+    --accent-soft: var(--intro-soft);
+
+    color-scheme: light;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17181a;
+      --surface: #202225;
+      --surface-2: #26282b;
+      --border: #35383c;
+      --text: #ece9e2;
+      --text-muted: #a7a397;
+      --text-faint: #75726a;
+      --mono-bg: #26282b;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.35);
+
+      --intro: #6f9dcc;    --intro-soft: #223345;
+      --c2:    #4fb3a6;    --c2-soft:    #1c3330;
+      --c3:    #d98a97;    --c3-soft:    #3a2226;
+      --c4:    #a992d1;    --c4-soft:    #2e2740;
+      --c5:    #d99a76;    --c5-soft:    #3d2a1f;
+      --disc:  #d4a94a;    --disc-soft:  #3a2f18;
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #17181a;
+    --surface: #202225;
+    --surface-2: #26282b;
+    --border: #35383c;
+    --text: #ece9e2;
+    --text-muted: #a7a397;
+    --text-faint: #75726a;
+    --mono-bg: #26282b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.35);
+
+    --intro: #6f9dcc;    --intro-soft: #223345;
+    --c2:    #4fb3a6;    --c2-soft:    #1c3330;
+    --c3:    #d98a97;    --c3-soft:    #3a2226;
+    --c4:    #a992d1;    --c4-soft:    #2e2740;
+    --c5:    #d99a76;    --c5-soft:    #3d2a1f;
+    --disc:  #d4a94a;    --disc-soft:  #3a2f18;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  h1, h2, h3, .serif {
+    font-family: 'Source Serif 4', Georgia, serif;
+    text-wrap: balance;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  code, .mono, .stat-value {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  a { color: var(--accent); }
+  small {
+    font-size: 11px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-muted);
+    letter-spacing: .01em;
+  }
+
+  /* ---------- Top bar: horizontal chapter tabs ---------- */
+  .topbar {
+    flex: none;
+    display: flex;
+    align-items: stretch;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .topbar::-webkit-scrollbar { display: none; }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    font-family: 'Source Serif 4', serif;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text);
+    padding-right: 18px;
+    margin-right: 6px;
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+    flex: none;
+  }
+  .brand small {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 1px;
+  }
+
+  .tab {
+    appearance: none;
+    border: none;
+    background: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+    padding: 0 14px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    border-bottom: 2.5px solid transparent;
+    white-space: nowrap;
+    transition: color .12s ease, border-color .12s ease;
+  }
+  .tab:hover { color: var(--text); }
+  .tab[aria-selected="true"] {
+    color: var(--tab-accent, var(--accent));
+    border-bottom-color: var(--tab-accent, var(--accent));
+  }
+  .tab .progress {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-faint);
+    background: var(--surface-2);
+    border-radius: 20px;
+    padding: 1px 6px;
+  }
+  .tab[aria-selected="true"] .progress {
+    background: var(--tab-accent-soft, var(--accent-soft));
+    color: var(--tab-accent, var(--accent));
+  }
+
+  .theme-toggle {
+    flex: none;
+    margin-left: auto;
+    align-self: center;
+    display: flex;
+    gap: 2px;
+    background: var(--surface-2);
+    border-radius: 8px;
+    padding: 2px;
+  }
+  .theme-toggle button {
+    appearance: none;
+    border: none;
+    background: none;
+    color: var(--text-faint);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 5px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .theme-toggle button[aria-pressed="true"] {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow);
+  }
+
+  /* ---------- Body: sidebar + content ---------- */
+  .body {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
+  .sidebar {
+    flex: none;
+    width: 264px;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    overflow-y: auto;
+    padding: 18px 12px;
+  }
+  .sidebar-heading {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding: 4px 10px 10px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    width: 100%;
+    text-align: left;
+    appearance: none;
+    border: none;
+    background: none;
+    border-radius: 8px;
+    padding: 9px 10px;
+    margin-bottom: 2px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .nav-item:hover { background: var(--surface-2); color: var(--text); }
+  .nav-item[aria-current="true"] {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .nav-dot {
+    flex: none;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-top: 5px;
+    background: var(--accent);
+  }
+  .nav-item.pending .nav-dot {
+    background: transparent;
+    border: 1.5px dashed var(--text-faint);
+  }
+  .nav-item.pending { color: var(--text-faint); }
+  .nav-item.pending[aria-current="true"] { color: var(--accent); }
+  .nav-index {
+    flex: none;
+    width: 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 1px;
+  }
+
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 40px 48px 80px;
+  }
+  .content-inner { max-width: 720px; margin: 0 auto; }
+
+  .eyebrow {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .content h1 { font-size: 27px; margin: 0 0 22px; }
+  .content h3 {
+    font-size: 15px;
+    margin: 28px 0 10px;
+    color: var(--text);
+  }
+  .content p { margin: 0 0 15px; color: var(--text); max-width: 66ch; }
+  .content p.muted { color: var(--text-muted); }
+
+  .content ul, .content ol {
+    margin: 0 0 18px;
+    padding-left: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 66ch;
+  }
+  .content li {
+    position: relative;
+    padding-left: 22px;
+    color: var(--text);
+  }
+  .content li.muted { color: var(--text-muted); }
+  .content ul li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 9px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .content ol { counter-reset: item; }
+  .content ol li { padding-left: 26px; }
+  .content ol li::before {
+    counter-increment: item;
+    content: counter(item);
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .content li > ul, .content li > ol { margin-top: 8px; margin-bottom: 0; }
+
+  blockquote {
+    margin: 20px 0;
+    padding: 16px 20px;
+    background: var(--surface-2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: var(--text);
+    max-width: 64ch;
+  }
+  blockquote p { margin: 0; }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 18px 0 24px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .card .stat-value {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .card .stat-label { font-size: 12.5px; color: var(--text-muted); }
+
+  .stat-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 6px 0 24px;
+    font-size: 13.5px;
+  }
+  .stat-table th, .stat-table td {
+    text-align: left;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .stat-table th {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .stat-table td.num { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+  .stat-table tr:last-child td { border-bottom: none; }
+
+  .forest-chart { margin: 4px 0 22px; max-width: 640px; }
+  .forest-svg { width: 100%; height: auto; display: block; }
+  .fc-panel-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    fill: var(--text-muted);
+  }
+  .fc-row-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 11.5px;
+    fill: var(--text-muted);
+  }
+  .fc-zero { stroke: var(--border); stroke-width: 1; stroke-dasharray: 3 3; }
+  .fc-ci { stroke: var(--accent); stroke-width: 2; stroke-linecap: round; }
+  .fc-cap { stroke: var(--accent); stroke-width: 1.5; }
+  .fc-dot { fill: var(--accent); stroke: var(--surface); stroke-width: 1.5; }
+  .fc-axis-line { stroke: var(--border); stroke-width: 1; }
+  .fc-axis-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    fill: var(--text-faint);
+  }
+
+  .callout {
+    background: var(--accent-soft);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin: 18px 0;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .callout .callout-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--accent);
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-faint);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 4px 9px;
+    margin: 4px 0 18px;
+  }
+
+  .pending-panel {
+    border: 1.5px dashed var(--border);
+    border-radius: 12px;
+    padding: 32px 28px;
+    text-align: center;
+    color: var(--text-faint);
+    max-width: 480px;
+  }
+  .pending-panel h3 { margin: 10px 0 6px; color: var(--text-muted); }
+  .pending-panel p { font-size: 13px; color: var(--text-faint); margin: 0; }
+
+  .figure-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 18px 0 24px;
+  }
+  .figure-grid figure { margin: 0; }
+  .figure-grid img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+  .figure-grid figcaption {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .figure-single { margin: 4px 0 24px; max-width: 560px; }
+  .figure-single img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+  .figure-single figcaption {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .math-block {
+    margin: 10px 0 18px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow-x: auto;
+    font-size: 15px;
+  }
+  .math-block .katex-display { margin: 0; }
+
+  .fig-annot {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .fig-annot-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .fig-annot-method {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .fig-annot-stat {
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 780px) {
+    .body { flex-direction: column; overflow-y: auto; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+    .content { padding: 28px 20px 60px; }
+    .card-grid { grid-template-columns: 1fr; }
+    .figure-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="topbar" role="tablist" id="topbar">
+  <div class="brand">Internal Defense &nbsp <small>Jilong WU</small></div>
+  <div class="theme-toggle" id="themeToggle">
+    <button data-theme="light" aria-pressed="true">Light</button>
+    <button data-theme="dark" aria-pressed="false">Dark</button>
+  </div>
+</div>
+
+<div class="body">
+  <nav class="sidebar" id="sidebar" aria-label="Section topics"></nav>
+  <main class="content" id="content"><div class="content-inner" id="contentInner"></div></main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var esc = function (s) { return s; }; // content below is hand-authored, not user input
+
+  var SECTIONS = [
+    {
+      id: "intro", label: "Welcome", accentVar: "--intro", accentSoftVar: "--intro-soft",
+      items: [
+        { id: "welcome-note", label: "Welcome", status: "ready", eyebrow: "Before we begin",
+          title: "A note on the planned structure",
+          body:
+            '<p>I would like to sincerely thank the committee for their thorough and constructive feedback on the manuscript. Before proceeding to the chapter-by-chapter discussion, I would like to note the following regarding how this document is organized:</p>' +
+            '<ul>' +
+              '<li>Minor typographical errors, wording issues, and other text mistakes identified in your comments have already been corrected directly in the manuscript. Thank you for your attention to detail.<ul> <li> <small>Including [Lippens 2.4], [Van de gaer 3.2], [Van de gaer 3.4], [Van de gaer 3.Minor1], [Lippens 3.3], [Rohde 3.3], [van Dolder 3.Minor1], [van Dolder 3.Minor2], [Cecchi 3.Minor1], [Van de gaer 4.2], [Cecchi 4.Minor1], [Lippens 5.3], [Lippens 5.4], [Lippens 5.5] </small> </li> </ul></li>' +
+              '<li>For the sake of clarity and concision, comments are sorted based on similarity rather than reproduced and answered one by one. Should any committee member feel that a particular comment has not been sufficiently addressed, I would warmly welcome you to raise it again, and I would be glad to respond in more detail.</li>' +
+              '<li>Comments of a more general nature, not tied to a specific chapter, are addressed in the final section, &ldquo;Intro/Discussion.&rdquo;</li>' +
+            '</ul>'
+        }
+      ]
+    },
+    {
+      id: "c2", label: "Chapter 2", accentVar: "--c2", accentSoftVar: "--c2-soft",
+      items: [
+        {
+          id: "plain-language-c2", label: "Estimation methods", status: "ready",
+          eyebrow: "Chapter 2 — Estimation model summary",
+          title: "Estimation approach in plain language <br> <small>[Rohde 2.1], [Rohde 2.2]</small>",
+          body:
+            '<p>We\'re pooling about 812 estimates from 166 papers with a Bayesian meta-analysis method. Each estimate includes a set of PT parameter estimates, including loss aversion.</p>' +
+              '<ul>' +
+                '</li>' +
+                '<li>The estimation derives a weighted average of the individual estimates, while each estimate\'s weight is determined by its precision (i.e., estimates\' standard errors).</li>' +
+                '<li>When standard errors are missing, we impute them based on observed information (e.g., number of participants).</li>' +
+                '<li>The model estimates how study features &mdash; such as elicitation method, sample characteristics, and functional form &mdash; are related to each parameter.</li>' +
+            '</ul>' +
+            '<p>Behind the estimation, the main assumptions are:</p>' +
+            '<ul>' +
+                '<li>Reported estimates are approximately normally distributed around the \'true\' parameter value.</li>' +
+                '</li>' +
+                '<li>The unexplained variation across studies follows one common multivariate distribution, allowing the four parameters to be correlated.</li>' +
+                '<li>After accounting for study characteristics and this shared variation, study estimates are treated as independent.</li>' +
+            '</ul>' 
+        },
+        {
+          id: "clustering", label: "Paper-level clustering", status: "ready",
+          eyebrow: "Chapter 2 — Meta-analysis",
+          title: "Why not hierarchical estimation? <br> <small>[Cecchi 2.2], [Lippens 2.1], & [Lippens 3.1] </small> ",
+          body:
+            '<p>The meta-analysis data have a hierarchical structure: a single paper can contribute one estimate or over a hundred &mdash; especially large multi-country studies.</p>' +
+            '<ul>' +
+              '<li>We implemented a Bayesian hierarchical estimation in an earlier version. The main results (parameter estimates, meta-regression coefficients) are similar.</li>' +
+              '<li>Yet, the hierarchical extension did not converge reliably when including the covariance structure.</li>' +
+              '<li>For the paper, the intercorrelation of PT parameters is of interest.</li>' +
+            '</ul>'
+        },
+        {
+          id: "cheung", label: "Outlier: Cheung & Johnstone", status: "ready",
+          eyebrow: "Chapter 2 — Robustness",
+          title: "Impacts of C &amp; J (2017)? <br> <small>[Cecchi 2.2] & [Lippens 2.3]</small>",
+          body:
+            '<p>Concern: this paper\'s estimates look unusually influential on the lottery-menu utility-curvature coefficient. Four reasons this isn\'t a bigger problem:</p>' +
+            '<ul>' +
+              '<li>12 / 812 estimates from this paper (1.5%), from 1 of 166 papers (0.6%).</li>' +
+              '<li>Imprecise estimates (se: ~10&times;): the shrinkage is substantial.</li>' +
+              '<li>Meta-regression further controls for its impact. <small>It indeed drives the lottery-menu coefficient as noted, but the lottery-menu finding is not the focus of the paper.</small></li>' +
+            '</ul>'
+        },
+        {
+          id: "llo-prelec", label: "LLO / Prelec II robustness", status: "ready",
+          eyebrow: "Chapter 2 — Robustness",
+          title: "Does the elicitation-method effect survive functional-form confounding? <br> <small>[Cecchi 2.1] & [Rohde 2.3]</small>",
+          body:
+            '<p>Speaking to functional-form confounding: a robustness check restricted to the subset of the two-parameter probability-weighting forms (LLO, Prelec II, N = 404).</p>' +
+            '<div class="forest-chart">' +
+              '<svg class="forest-svg" viewBox="0 0 640 355" role="img" aria-label="Elicitation-method effects on utility curvature (1 minus rho), sensitivity and elevation"><text x="0" y="16" class="fc-panel-title">Utility curvature (1 - rho)</text><line x1="341.2" y1="24" x2="341.2" y2="103" class="fc-zero"/><text x="0" y="42" class="fc-row-label">Bisection</text><line x1="360.6" y1="38.5" x2="414.2" y2="38.5" class="fc-ci"/><line x1="360.6" y1="34.5" x2="360.6" y2="42.5" class="fc-cap"/><line x1="414.2" y1="34.5" x2="414.2" y2="42.5" class="fc-cap"/><circle cx="387.4" cy="38.5" r="4.5" class="fc-dot"/><text x="0" y="67" class="fc-row-label">List_CE</text><line x1="451.8" y1="63.5" x2="503.2" y2="63.5" class="fc-ci"/><line x1="451.8" y1="59.5" x2="451.8" y2="67.5" class="fc-cap"/><line x1="503.2" y1="59.5" x2="503.2" y2="67.5" class="fc-cap"/><circle cx="478.3" cy="63.5" r="4.5" class="fc-dot"/><text x="0" y="92" class="fc-row-label">Matching</text><line x1="470.6" y1="88.5" x2="572.9" y2="88.5" class="fc-ci"/><line x1="470.6" y1="84.5" x2="470.6" y2="92.5" class="fc-cap"/><line x1="572.9" y1="84.5" x2="572.9" y2="92.5" class="fc-cap"/><circle cx="521.5" cy="88.5" r="4.5" class="fc-dot"/><text x="0" y="127" class="fc-panel-title">Sensitivity</text><line x1="341.2" y1="135" x2="341.2" y2="214" class="fc-zero"/><text x="0" y="153" class="fc-row-label">Bisection</text><line x1="273.7" y1="149.5" x2="331" y2="149.5" class="fc-ci"/><line x1="273.7" y1="145.5" x2="273.7" y2="153.5" class="fc-cap"/><line x1="331" y1="145.5" x2="331" y2="153.5" class="fc-cap"/><circle cx="301.5" cy="149.5" r="4.5" class="fc-dot"/><text x="0" y="178" class="fc-row-label">List_CE</text><line x1="174.2" y1="174.5" x2="229.5" y2="174.5" class="fc-ci"/><line x1="174.2" y1="170.5" x2="174.2" y2="178.5" class="fc-cap"/><line x1="229.5" y1="170.5" x2="229.5" y2="178.5" class="fc-cap"/><circle cx="201.8" cy="174.5" r="4.5" class="fc-dot"/><text x="0" y="203" class="fc-row-label">Matching</text><line x1="259.4" y1="199.5" x2="369.1" y2="199.5" class="fc-ci"/><line x1="259.4" y1="195.5" x2="259.4" y2="203.5" class="fc-cap"/><line x1="369.1" y1="195.5" x2="369.1" y2="203.5" class="fc-cap"/><circle cx="314.2" cy="199.5" r="4.5" class="fc-dot"/><text x="0" y="238" class="fc-panel-title">Elevation</text><line x1="341.2" y1="246" x2="341.2" y2="325" class="fc-zero"/><text x="0" y="264" class="fc-row-label">Bisection</text><line x1="273.2" y1="260.5" x2="370" y2="260.5" class="fc-ci"/><line x1="273.2" y1="256.5" x2="273.2" y2="264.5" class="fc-cap"/><line x1="370" y1="256.5" x2="370" y2="264.5" class="fc-cap"/><circle cx="322.6" cy="260.5" r="4.5" class="fc-dot"/><text x="0" y="289" class="fc-row-label">List_CE</text><line x1="310.4" y1="285.5" x2="402" y2="285.5" class="fc-ci"/><line x1="310.4" y1="281.5" x2="310.4" y2="289.5" class="fc-cap"/><line x1="402" y1="281.5" x2="402" y2="289.5" class="fc-cap"/><circle cx="357.2" cy="285.5" r="4.5" class="fc-dot"/><text x="0" y="314" class="fc-row-label">Matching</text><line x1="147.1" y1="310.5" x2="319.2" y2="310.5" class="fc-ci"/><line x1="147.1" y1="306.5" x2="147.1" y2="314.5" class="fc-cap"/><line x1="319.2" y1="306.5" x2="319.2" y2="314.5" class="fc-cap"/><circle cx="232.8" cy="310.5" r="4.5" class="fc-dot"/><line x1="96" y1="331" x2="624" y2="331" class="fc-axis-line"/><line x1="120" y1="331" x2="120" y2="335" class="fc-axis-line"/><text x="120" y="346" class="fc-axis-label" text-anchor="middle">-0.4</text><line x1="175.3" y1="331" x2="175.3" y2="335" class="fc-axis-line"/><text x="175.3" y="346" class="fc-axis-label" text-anchor="middle">-0.3</text><line x1="230.6" y1="331" x2="230.6" y2="335" class="fc-axis-line"/><text x="230.6" y="346" class="fc-axis-label" text-anchor="middle">-0.2</text><line x1="285.9" y1="331" x2="285.9" y2="335" class="fc-axis-line"/><text x="285.9" y="346" class="fc-axis-label" text-anchor="middle">-0.1</text><line x1="341.2" y1="331" x2="341.2" y2="335" class="fc-axis-line"/><text x="341.2" y="346" class="fc-axis-label" text-anchor="middle">0</text><line x1="396.5" y1="331" x2="396.5" y2="335" class="fc-axis-line"/><text x="396.5" y="346" class="fc-axis-label" text-anchor="middle">0.1</text><line x1="451.8" y1="331" x2="451.8" y2="335" class="fc-axis-line"/><text x="451.8" y="346" class="fc-axis-label" text-anchor="middle">0.2</text><line x1="507.1" y1="331" x2="507.1" y2="335" class="fc-axis-line"/><text x="507.1" y="346" class="fc-axis-label" text-anchor="middle">0.3</text><line x1="562.4" y1="331" x2="562.4" y2="335" class="fc-axis-line"/><text x="562.4" y="346" class="fc-axis-label" text-anchor="middle">0.4</text><line x1="617.7" y1="331" x2="617.7" y2="335" class="fc-axis-line"/><text x="617.7" y="346" class="fc-axis-label" text-anchor="middle">0.5</text></svg>' +
+            '</div>'
+        },
+        {
+          id: "conditional", label: "Elicitation-conditional estimates", status: "ready",
+          eyebrow: "Chapter 2 — R&amp;R requirement",
+          title: "Elicitation-conditional estimates. <br> <small>[Cecchi 2.3]</small>",
+          body:
+            '<ul>' +
+              '<li> As required, I have conducted separate estimations conditional on elicitation method. Here I demonstrate the key groups: binary-choice studies & CE-list studies: </li>' +
+              '<li>Making it the headline estimands? An open question for the R&R.</li>' +
+            '</ul>' +
+            '<div class="figure-grid">' +
+              '<figure><div class="fig-annot"><div class="fig-annot-item"><span class="fig-annot-method">Binary</span><span class="fig-annot-stat">mean 1-rho = 0.666</span><span class="fig-annot-stat"> <span style="visibility: hidden;">placeholder text</span> </span></div><div class="fig-annot-item"><span class="fig-annot-method">List_CE</span><span class="fig-annot-stat">mean 1-rho = 0.967</span></div></div><img src="web-figure/power_utility_binary_listce_95ci.png" alt="Power-utility curvature estimates by elicitation method, Binary vs List_CE, with 95% CI"/><figcaption>Power-utility curvature: Binary vs. List_CE, 95% CI</figcaption></figure>' +
+              '<figure><div class="fig-annot"><div class="fig-annot-item"><span class="fig-annot-method">Binary Choice</span><span class="fig-annot-stat">mean gamma = 0.759</span><span class="fig-annot-stat">mean delta = 0.942</span></div><div class="fig-annot-item"><span class="fig-annot-method">CE List</span><span class="fig-annot-stat">mean gamma = 0.597</span><span class="fig-annot-stat">mean delta = 0.940</span></div></div><img src="web-figure/llo_pwf_binary_listce_95ci.png" alt="Prelec-II probability-weighting function estimates by elicitation method, Binary vs List_CE, with 95% CI"/><figcaption>Prelec-II probability weighting: Binary vs. List_CE, 95% CI</figcaption></figure>' +
+            '</div>'
+        },
+        {
+          id: "pet-peese", label: "Publication bias (PET-PEESE)", status: "ready",
+          eyebrow: "Chapter 2 — Publication bias",
+          title: "How is publication bias assessed? <br> <small>[Lippens 2.2]</small>",
+          body:
+            '<ul>' +
+              '<li>No more formal directional bias analysis is reported because, for PT parameters, it is difficult to argue for a systematic direction of bias &mdash; and with three parameters, it is unclear which one such a bias would even act on. </li>' +
+              '<li>Existing evidence suggests mild (if any) publication bias. To test this further, PET&ndash;PEESE (Stanley, 2017) was implemented, restricted to estimates with genuinely reported (non-imputed) standard errors and clustered by paper. </li>' +
+            '</ul>' +
+            '<table class="stat-table"><thead><tr><th>Parameter</th><th>PET p-value</th><th>n (papers)</th><th>Naive mean</th><th>PEESE-corrected</th></tr></thead><tbody>' +
+              '<tr><td>Sensitivity</td><td class="num">0.037*</td><td class="num">690 (138)</td><td class="num">0.564</td><td class="num">0.564</td></tr>' +
+              '<tr><td>Elevation</td><td class="num">0.013*</td><td class="num">350 (82)</td><td class="num">0.905</td><td class="num">0.904</td></tr>' +
+              '<tr><td>Utility curvature</td><td class="num">0.634</td><td class="num">&mdash;</td><td class="num">&mdash;</td><td class="num">no correction</td></tr>' +
+            '</tbody></table>' +
+            '<div class="callout"><span class="callout-label">Bottom line</span>Even where asymmetry is statistically detected, its magnitude is negligible &mdash; the PEESE-corrected and naive precision-weighted means are virtually identical for both sensitivity and elevation. Headline findings are robust to publication bias.</div>'
+        }
+      ]
+    },
+    {
+      id: "c3", label: "Chapter 3", accentVar: "--c3", accentSoftVar: "--c3-soft",
+      items: [
+        { id: "c3-intro", label: "Twofold pattern - threshold", status: "ready", eyebrow: "Chapter 3 — Twofold pattern",
+          title: "Is the twofold pattern claim fair? <br> <small>[van Dolder 3], [Van de gaer 3.2], [Van de gaer 3.3]</small>",
+          body:
+            '<p>We claim we could find a fourfold pattern in CE-list data, but only a twofold pattern in binary-choice data.</p>' +
+            '<ul>' +
+                '<li> Our meta-analysis results — based on (200, 0.1) — are robust to (100, 0.05) and (20, 0.05). </li>'+
+                '<li>Theoretically, we could find a fourfold pattern as long as the PWF is inverse-S shaped. Yet, this requires very small probabilities if the utility concavity is strong.</li>' +
+                '<li><figure class="figure-single"><img src="web-figure/tk_wg.png" alt="Tversky-Kahneman probability-weighting function pattern"/></figure> </li>' +
+                '<li> With our binary-choice estimates (rho = 0.574, gamma = 0.696), we could only find risk-seeking for gains when the winning probability is lower than 0.2%. </li>' +
+            '</ul>' +
+            '<div class="callout"><span class="callout-label">Bottom line</span>The twofold pattern holds within the probability range most commonly studied in the literature. More broadly, the key message is that the same question, asked in different contexts, can yield very different responses.</div>' 
+          },
+          { id: "c3-loss", label: "Loss domain", status: "ready", eyebrow: "Chapter 3 — Twofold pattern",
+          title: "The loss domain <br> <small>[Cecchi 3.3]</small>",
+          body:
+            '<p>How established is the twofold pattern in losses, given the hypothetical incentive?</p>' +
+            '<p> <b>I believe the twofold pattern for losses is as established as for gains.</b> </p>' +
+            '<ul>' +
+                '<li>A recent meta-analysis (Li & Vieider, 2026, JPE: Micro) shows no behavioral difference between real and hypothetical incentives.</li>' +
+                '<li>It is well-documented that people are more risk-neutral in the loss domain than in the gain domain.</li>' +
+            '</ul>'
+          },
+        { id: "c3-rohde", label: "Non-parametric", status: "ready", eyebrow: "Chapter 3 — Non-parametric FF pattern",
+          title: "What about that non-parametric evidence on the FF pattern? <br> <small>[Rohde 3.1]</small>",
+          body:
+            '<p>In my understanding, there are two types of \"non-parametric\" analysis of risk attitudes.</p>' +
+            '<ul>' +
+                '<li>Non-parametric measurement of PT functionals (Abdellaoui, 2000, MS):' +
+                '<ul><li>Note, their non-parametric measurement of PWF does not ensure the FF pattern.</li><li>Our meta-analysis includes those papers, as they usually also provide parametric estimates. So, we do not miss this part.</li></ul>' +
+                '</li>' +
+                '<li>Choice-level analysis (e.g., Kahneman & Tversky, 1979)        <ul><li>Such analysis adopts a different definition of risk attitudes: the proportion of choosing a lottery over a sure amount equal to or slightly higher than its expected value. <li> This is very different from the modern definition: whether the certainty equivalent is higher than the expected value.</li><li> Finally, the evidence of this analysis is mixed. <em> I could not replicate KT79 </em>: </li></li></ul> </li>' +
+            '</ul>' +
+            '<table class="stat-table"><thead><tr><th>Choice</th><th>TK79</th><th>N (mine)</th><th>% mine</th><th>N (TK79)</th><th>% TK79</th><th>p (Fisher)</th></tr></thead><tbody>' +
+              '<tr><td>(4000, 0.8) versus 3000</td><td>P3</td><td class="num">683</td><td class="num">22.7%</td><td class="num">95</td><td class="num">20.0%</td><td class="num">0.602</td></tr>' +
+              '<tr><td>(-4000, 0.8) versus -3000</td><td>P3\'</td><td class="num">683</td><td class="num">48.5%</td><td class="num">95</td><td class="num">91.6%</td><td class="num">&lt;0.001</td></tr>' +
+              '<tr><td>(5000, 0.001) versus 5</td><td>P14</td><td class="num">683</td><td class="num">48.5%</td><td class="num">72</td><td class="num">72.2%</td><td class="num">&lt;0.001</td></tr>' +
+              '<tr><td>(-5000, 0.001) versus -5</td><td>P14\'</td><td class="num">683</td><td class="num">27.8%</td><td class="num">72</td><td class="num">16.7%</td><td class="num">0.049</td></tr>' +
+            '</tbody></table>'
+          },
+        { id: "c3-matching", label: "Direct matching", status: "ready", title: "CE list alternative: direct matching <br> <small> [Van de gaer 3.5], [Van de gaer 4.3] </small>",
+          body:
+            '<p>Yes, the model predicts a fourfold pattern in all valuation tasks, including various matching methods (e.g., by dragging a slider or directly stating).</p>' +
+            '<ul>' +
+                '<li> The meta-analysis results in C2 (the coefficient of <em>Matching</em>). </li>' +
+                '<li> In fact, experimentalists developed the CE choice list as a simplification of the direct matching approach <small>to avoid complicated incentive mechanisms like BDM</small>. </li>' +
+                '<li> Recent studies on cognitive noise show their results hold under the CE choice list as well as direct matching methods. </li>' +
+            '</ul>'
+         },
+        { id: "c3-meta", label: "Meta-analysis", status: "ready", status: "ready", eyebrow: "Chapter 3 — Meta-analysis",
+          title: "Meta-analysis of Predictive CE <br> <small>[Cecchi 3.2]</small>",
+          body:
+            '<p>In this chapter, we firstly derive the predictive CE per paper.</p>' +
+            '<ul>' +
+                '<li> So, even if we take independent draws from reported estimates, the covariance of PT parameters ACROSS papers would still be captured (at least partially).</li>'+
+                '<li>We could of course take the draws from the posterior estimates and then derive the predictive CE. This approach will result in more significant results due to one more layer of shrinkage. <small> The posterior estimates are closer to the overall mean of each group.</small> </li>' +
+            '</ul>' +
+            '<div class="callout"><span class="callout-label">Bottom line</span>The twofold pattern holds within the probability range most commonly studied in the literature. More broadly, the key message is that the same question, asked in different contexts, can yield very different responses.</div>' 
+          },
+        { id: "c3-noisy", label: "The cognitive-noise model", status: "ready", eyebrow: "Chapter 3 — cognitive model vs. PT",
+          title: "Cognitive model vs. PT <br> <small>[Rohde 3.4], [Rohde 3.5]</small>",
+          body:
+            '<p>The intuition of the cognitive-noise model:</p>' +
+            '<ul>' +
+                '<li>Due to cognitive noise, it is optimal to combine the signal perception with prior information, i.e., cognitive defaults. Thereby, the mental representation of choice attributes is a weighted average of the signal and the prior: \\(\\hat{X} = \\gamma X + (1-\\gamma) X_0\\)</li>' +
+                '<li>In binary choice, people directly compare the representation of \\(\\log(\\ell) = \\log\\left(\\frac{p}{1-p}\\right)\\) with that of the log cost-benefit \\(\\log\\left(\\frac{c-y}{x-c}\\right)\\). Thus, the sensitivity parameters \\(\\gamma\\) for both terms counter each other: \\(0 &lt; \\gamma_p, \\gamma_o &lt; \\frac{\\gamma_p}{\\gamma_o } &lt; 1\\).</li>' +
+                '<li>In CE-list, people first form the representation of the fixed part, \\(\\log(\\ell)\\). Then, based on that biased representation, DMs go on to find the specific equivalent in the second stage. In other words, the signal of the second stage equals the biased \\(\\log(\\ell)\\). Thus, the compound sensitivity parameter now is: \\(0 &lt; \\gamma_p \\gamma_o &lt; \\gamma_p, \\gamma_o &lt; 1\\).</li>' +
+                '<li>\\(0 &lt; \\gamma_p \\gamma_o &lt; \\frac{1}{\\gamma_o \\gamma_p} &lt; 1\\).</li>' +
+                '<li> So, cognitive noise accumulated over the two stages leads to stronger bias and inconsistency.</li>' +
+            '</ul>' 
+          },
+        { id: "c3-e2", label: "The model test", status: "ready", eyebrow: "Chapter 3 — Experiment 2: model test",
+          title: "The new treatment in E2 <br> <small>[Lippens 3.2]</small>",
+          body:
+            '<p> \"The treatment changes both how choices are grouped by lottery and whether participants evaluate the lottery beforehand.\"</p>' +
+            '<ul>' +
+                '<li>Yes, but the grouping itself also helps form an evaluation of the lottery: when people answer a sequence of binary choices which share the same lottery option, they would then switch to the valuation mode.</li>' +
+                '<li>We do have a fourth condition in E2: subjects answer binary choices in groups, but without the initial evaluation page. The results are in line with our predictions.</li>' +
+            '</ul>' +
+            '<figure class="figure-single" style="max-width: 450px; margin-left: auto; margin-right: auto; text-align: center;"><img src="web-figure/e2.png" alt="Experiment 2 treatment"/><figcaption>Experiment 2: treatment design</figcaption></figure>'
+          },
+          { id: "c3-lld", label: "Likelihood sensitivity index", status: "ready", title: "Subject-wise index of likelihood sensitivity <br> <small> [Rohde 3.2] – Figure 3.5 and Figure 3.8 </small>",
+          body:
+            '<p>Clarification: this index is not exactly probability weighting function\'s curvature, but an overall indicator of how decisions react to likelihood changes. Note: under dual-EU, these two coincide.</p>' +
+            '<ul>' +
+                '<li> I admit this part should be revised to make this point more explicit. </li>' +
+            '</ul>'
+         }
+      ]
+    },
+    {
+      id: "c4", label: "Chapter 4", accentVar: "--c4", accentSoftVar: "--c4-soft",
+      items: [
+        { id: "c4-theory", label: "Theory", status: "ready", eyebrow: "Theory",
+          title: "Model prediction clarification. <br> <small>[Rohde 4.1], [Rohde 4.2]</small>",
+          body:
+          '<p class="muted">Notation: \\(\\ell(p) = \\ln(p/(1-p))\\) is the log-odds of \\(p\\); \\(\\mu\\) is the common prior mean <small> (for demonstration, we can assume \\(\\mu = 0, \\;i.e., p_0=0.5 \\)) </small>; \\(\\rho\\) and \\(\\gamma\\) are the precision weights for the objective probability and the ambiguous probability. <small> \\(\\gamma\\ < \\rho\\) – The perception of objective probabilities is more precise than that of ambiguous probabilities. </small>  </p>' +
+          '<div class="callout"><span class="callout-label">Prediction 1</span>Since \\( 0 < \\frac{\\gamma}{\\rho} < 1 \\), the matching probability inferred from Choice is a compressed transformation of the ambiguity-neutral probability: low ambiguous probabilities are shifted upward toward the prior, whereas high ambiguous probabilities are shifted downward.</div>' + 
+          '<div class="math-block">$$ \\ell(\\bar{p}_r) = \\mu + \\frac{\\gamma}{\\rho} (\\ell(p_a) - \\mu)  $$</div>' +
+          '<div class="math-block">$$ \\frac{\\ell(\\bar{p}_r) - \\mu}{\\ell(p_a) - \\mu} = \\frac{\\gamma}{\\rho} \\quad \\xrightarrow{\\mu=0} \\quad \\frac{\\ell(\\bar{p}_r)}{\\ell(p_a)} = \\frac{\\gamma}{\\rho} $$</div>' +
+          '<div class="callout"><span class="callout-label">Prediction 2b</span>Since \\( 0 < \\rho < 1\\), we have \\(\\gamma < \\frac{\\gamma}{\\rho} \\). Therefore, relative to standalone binary Choice, MP lists amplify a-insensitivity.</div>' + 
+          '<div class="math-block">$$ \\frac{\\ell(p_r^*) - \\mu}{\\ell(p_a) - \\mu} = \\gamma $$</div>'
+          },
+        { id: "c4-order", label: "Order effects", status: "ready", eyebrow: "Are there order effects?",
+          title: "Order effects. <br> <small>[Cecchi 4.3]</small>",
+          body:
+            '<p>The Choice–MP differences hold when using only each subject\'s first task (i.e. as a between-subject comparison). </p>'+
+            '<figure class="figure-single" style="max-width: 450px; margin-left: auto; margin-right: auto; text-align: center;"><img src="web-figure/g_AA_mp_first_responses.png" alt="Choice-list and binary-choice ambiguity attitude by A-neutral likelihood, when asked first"/><figcaption>MP vs. Choice, when asked first</figcaption></figure>'
+        },
+        { id: "c4-test", label: "Response consistency", status: "ready", eyebrow: "Does response consistency hold under a paired test?",
+          title: "Does response consistency hold under McNemar's test? <br> <small>[Lippens 4.1]</small>",
+          body:
+            '<p>Since each participant completes both formats, the switching indicators are paired within-subject &mdash; the Fisher tests reported earlier treat the switching proportions as independent, which does not account for which participants switch in both formats. As a check, I re-ran the comparison with McNemar\'s test (McNemar, 1947), which accounts for the pairing directly.</p>' +
+            '<table class="stat-table"><thead><tr><th>Known probability</th><th>Fisher test</th><th>McNemar test</th><th>Same conclusion at 5%?</th></tr></thead><tbody>' +
+              '<tr><td class="num">0.1</td><td class="num">0.253</td><td class="num">0.243</td><td>Yes</td></tr>' +
+              '<tr><td class="num">0.2</td><td class="num">0.634</td><td class="num">0.630</td><td>Yes</td></tr>' +
+              '<tr><td class="num">0.3</td><td class="num">0.796</td><td class="num">0.795</td><td>Yes</td></tr>' +
+              '<tr><td class="num">0.4</td><td class="num">&lt;0.001</td><td class="num">&lt;0.001</td><td>Yes</td></tr>' +
+              '<tr><td class="num">0.5</td><td class="num">0.023</td><td class="num">0.018</td><td>Yes</td></tr>' +
+              '<tr><td class="num">0.6</td><td class="num">0.037</td><td class="num">0.029</td><td>Yes</td></tr>' +
+              '<tr><td class="num">0.7</td><td class="num">0.046</td><td class="num">0.044</td><td>Yes</td></tr>' +
+              '<tr><td class="num">0.8</td><td class="num">0.012</td><td class="num">0.006</td><td>Yes</td></tr>' +
+              '<tr><td class="num">0.9</td><td class="num">&lt;0.001</td><td class="num">0.001</td><td>Yes</td></tr>' +
+            '</tbody></table>' +
+            '<div class="callout"><span class="callout-label">Bottom line</span>Accounting for pairing with McNemar\'s test does not change any conclusion about differences in response consistency at the 5% level &mdash; the independence assumption in the original Fisher tests is not driving the results.</div>'
+        },
+        { id: "c4-individual", label: "Individual heterogeneity", status: "ready", eyebrow: "Chapter 4 \u2014 Heterogeneity",
+          title: "Does individual-level heterogeneity match the theory's prediction? <br> <small>[Van de gaer 4.4]</small>",
+          body:
+            '<p>At the individual level, I test whether subjects who are more ambiguity-seeking under Matching at low likelihoods are more ambiguity-averse at high likelihoods, correlating the average local ambiguity index across the low levels (0.1, 0.2, 0.3) with that across the high levels (0.7, 0.8, 0.9). The two are significantly correlated.</p>' +
+            '<ul><li>This correlation holds under both Matching and Choice conditions (\\(p < 0.001\\) for both).</li></ul>' +
+            '<p>As for the overall heterogeneity of the two global measures, the figure below shows significantly lower variation of a-insensitivity and ambiguity measures in Choice than in Matching (Paired permutation test: \\(p < 0.01\\) for both measures).</p>' +
+            '<figure class="figure-single" style="max-width: 560px; margin-left: auto; margin-right: auto; text-align: center;"><img src="web-figure/g_global_AA_heterogeneity.png" alt="Heterogeneity of global ambiguity attitudes across individuals"/><figcaption>Distribution of individual-level global a-insensitivity and global ambiguity measures</figcaption></figure>'
+        }
+      ]
+    },
+    {
+      id: "c5", label: "Chapter 5", accentVar: "--c5", accentSoftVar: "--c5-soft",
+      items: [
+        { id: "c5-motivation", label: "Motivation", status: "ready", eyebrow: "The motivation",
+          title: "Motivation for such training manipulation <br> <small>[Cecchi 5.5], [Lippens 5.2], [Rohde 5.1], </small>",
+          body:
+              '<p> As Chapters 3-4 find, the cognitive friction arising from the choice-list elicitation plays a big role. One natural question is whether this friction can be reduced by familiarizing subjects with choice attributes. <br> <small> This helps explore its robustness: Does experience in one condition transfer to another? </small></p>' +
+            '<ul><li>Efficient-coding research (Frydman and Jin, 2022) shows that training without feedback can affect subjects\' representation of choice attributes and change their behavior (in a binary-choice setup). </li></ul>' +
+            '<p>Plott\'s Discovered Preference Hypothesis is that people learn their preferences through repetition with feedback. </p>' +
+            '<ul><li>The reason for the absence of such feedback is to keep ambiguity identical across the two conditions (Feedback can help subjects learn the opaque box). <small>A better setup would use risky tasks. </small> </li></ul>' +
+            '<ul><li>I admit this is not the strongest test of training, and many other related research questions remain to be addressed. <small>A promising field.</small> </li></ul>' 
+        },
+        { id: "c5-power", label: "Power & equivalence", status: "ready", eyebrow: "Chapter 5 \u2014 Power & equivalence",
+          title: "Is the null result on training adequately powered? <br> <small>[Cecchi 5.1], [Lippens 5.1]</small>",
+          body:
+            '<p>Sample size is sufficient to detect an effect size matching the a-insensitivity (the key measure) gap identified in Chapter 4. <small>Gap: 0.203 index points; 95% CI [0.089, 0.317]. Standardized difference: <em>d</em> = 0.494. </small> </p>' +
+            '<p>With 82 and 86 participants, a two-sided \\(\\alpha=.05\\), and target power of 80%, the minimum detectable standardized difference is: <b>d = 0.435</b>.</p>'+
+            '<ul>' +
+              '<li> The training-effect estimate is near zero (\\(d = .03\\)). The wide 95% CI (\\(d \\approx [-0.27,\\ 0.33]\\)) supports &ldquo;no clear evidence of an effect.&rdquo; It rules out a reduction as large as the full Matching&ndash;Choice gap, but not a roughly half-sized one.</li>' +
+              '<li><strong>Equivalence test:</strong> the 90% CI for a-insensitivity is approximately \\(d \\approx [-0.22,\\ 0.28]\\). <ul>' +
+                '<li>A bound of \\(d = .20\\): equivalence is not supported.</li>' +
+                '<li>A bound of \\(d = .30\\): equivalence would be supported.</li>' +
+              '</ul></li>' +
+            '</ul>' 
+        },
+        { id: "c5-dominance_check", label: "Dominance check", status: "ready", eyebrow: "Chapter 5 \u2014 A mistake in the dominance check",
+          title: "The dominance check further underpowered? <br> <small>[Cecchi 5.4], [Lippens 5.3], [Lippens 5.4]</small>",
+          body:
+            '<p>I acknowledge the original check is based on a subset of the data, due to a wrong filter command. Below are the updated results on the full sample (like the other analyses):</p>' +
+            '<table class="stat-table"><thead><tr><th>Measure</th><th>Extensive training</th><th>Sparse training</th><th><em>p (original)</em></th><th><em>p</em> (corrected)</th></tr></thead><tbody>' +
+              '<tr><td>Ambiguity dominance violation</td><td class="num">0.721</td><td class="num">0.817</td><td class="num">0.149</td><td class="num">0.298</td></tr>' +
+              '<tr><td>Risk dominance violation</td><td class="num">0.570</td><td class="num">0.744</td><td class="num">0.023</td><td class="num">0.137</td></tr>' +
+            '</tbody></table>' +
+            '<div class="callout"><span class="callout-label">Bottom line</span>On the full sample, neither difference survives correction for multiple testing (<em>p</em> = .298 and <em>p</em> = .137) &mdash; consistent with the null results on other measures.</div>'
+        },
+        { id: "c5-ws-comparison", label: "Within-subject comparisons", status: "ready" , eyebrow: "Chapter 5 \u2014 Power & equivalence",
+          title: "Within-subject comparisons <br> <small>[Cecchi 5.3], [Rohde 5.2], [Van de gaer, Ch 5 comment]</small>",
+          body:
+            '<p>Replicating the within-subject comparison of Choice vs. MP for the extensive-training arm, I find results similar to C4: stronger insensitivity under Matching. </p>' +
+            '<figure class="figure-single" style="max-width: 560px; margin-left: auto; margin-right: auto; text-align: center;"><img src="web-figure/g_AA_clbc.png" alt="Choice-list vs. binary-choice ambiguity attitudes in the extensive-training arm"/><figcaption>Choice list vs. binary choice, extensive-training arm</figcaption></figure>' +
+            '<p>Within the choice-list task, comparing the first two and the last two list responses, no significant effect is detected. </small></p>'
+        },
+        { id: "c5-next-steps", label: "Next steps", status: "ready", eyebrow: "Chapter 5 \u2014 Next steps",
+          title: "What to do for this project? <br> <small>[Cecchi 5.2], [Lippens 5.2]</small>",
+          body:
+            '<p> The MP elicitation results in a stronger a-insensitivity, and an extensive training on the choice level does not help eliminate this impact. To deliver a more complete exploration: <p>' +
+            '<ul>' +
+              '<li> <strong>Under-power</strong>: Increase sample size to n = 400 per condition (to detect a small d = 0.2). </li>' +
+              '<li> <strong>Feedback</strong>: Include feedback in the training to better test the DPH. This requires a risky-choice task, where information is constant across different training conditions. </li>' +
+              '<li> <strong>Fatigue</strong>: Add extra irrelevant tasks before the sparse training to make total experimental duration the same across the two conditions. <ul> <li> Reduce the number of choice lists from 10 to 5, only keeping \\( p \\in (0.1, 0.3, 0.5, 0.7, 0.9) \\). </li> </ul> </li>' +
+              '<li> <strong>Complete design</strong>: There are three more potential conditions, which would help reveal a bigger picture. <ul> <li> Choice-list training and binary choice as main measure. </li> <li> Choice-list training and choice-list as main measure. </li> <li> Binary-choice training and binary choice as main measure. </li> </ul> </li>' +
+            '</ul>'
+        }
+      ]
+    },
+    {
+      id: "discussion", label: "Intro/Discussion", accentVar: "--disc", accentSoftVar: "--disc-soft",
+      items: [
+        { id: "Preference", label: "Preference", status: "ready", eyebrow: "Preference",
+          title: "The \"true preference\"? <br> <small>[Cecchi 3.1], [Lippens 1.1], [Lippens 1.2], [van Dolder 4], [Van de gaer 6.1]</small>",
+          body:
+            '<p>As the cognitive-noise theory does not entail any preference components, what is the welfare-relevant object?</p>' +
+            '<ul>' +
+                '<li>Regarding the welfare-relevant object, this thesis establishes one important step: acknowledging the presence and impact of cognitive noise. <small> This implies a larger space for welfare considerations &mdash; many non-risk-neutral behavior patterns are not driven by preferences, but by cognitive noise. This means we can help DMs make better decisions by eliminating cognitive noise, for example through better-designed decision environments.</small> </li>' +
+            '</ul>' +
+            '<p> Is preference present? </p>' +
+            '<ul>' +
+                '<li> Yes, I believe preference is present and affects individual decision-making, particularly when it comes to significant stakes, like the setup of “<em>Who Wants to Be a Millionaire?</em>”. (An important future research direction.)</li>' +
+                '<li> But, it plays a much more limited role in the lab, a setup examined by current cognitive-noise work, including this thesis. <small> This is in line with the findings of previous studies: a simple self-report survey measure of "willingness to risk" can outperform choice-based methods in predicting field behavior. </small> </li>' +
+            '</ul>' +
+            '<p> How to measure it? (An important open question for future research)</p>' +
+            '<ul>' +
+                '<li> Reduce cognitive demands of the elicitation. As commonly believed among experimentalists, the gold-standard would be a single binary choice. <small>(Moffatt, P., Starmer, C., Sugden, R., Bardsley, N., Cubitt, R., & Loomes, G. (2009). Experimental economics: Rethinking the rules.)</small> </li>' +
+                '<li> Or only a few. <small>(Chapman, J., Snowberg, E., Wang, S., & Camerer, C., 2024)</small> </li>' +
+                '<li> Another direction could be choice-free, like the general risk measure; or happiness measures <small> (Kahneman et al. 2004, Dohmen et al., 2011, JEEA). </small> </li>' +
+            '</ul>'
+        },
+        {id: "cog_model1", label: "Cognitive model / PT - 1", status: "ready", eyebrow: "Cognitive model / PT - 1",
+          title: "Cognitive model or PT? <br> <small>[van Dolder 1], [van Dolder 2], [Rohde 3.5], [Cecchi 4.1], [Cecchi 4.2]</small>",
+          body:
+            '<p>Can PT + endogenous reference point explain the observed behavior?</p>' +
+            '<ul>' +
+                '<li> We discussed one type of endogenous reference point, which could not explain the documented patterns. </li>' +                '<li> Another type of endogenous reference point can be: DMs take the smallest/biggest sure amount payment as the reference point, which converts the lottery into a mixed one. Yet, this implies stronger risk aversion due to loss aversion, conflicting with the observed behavior. </li>' +
+                '<li> Of course, if we allow for totally free endogenous reference points, the observed behavior can be accounted for. Yet, with such a free parameter, no theory can be testable/falsifiable. </li>' +
+            '</ul>' +
+            '<p>Can a simple heuristic of middle-bias explain the observed behavior?</p>' +
+            '<ul>' +
+                '<li> Yes, it can. </li>' +                
+                '<li> From a constructive perspective, the cognitive-noise model provides a micro-foundation for this ex-post heuristic explanation. </li>'  +
+                '<li> A further test could be to randomize row orders within each list [planned]. </li>' +
+            '</ul>' +
+          '<p>These two perspectives are a classic consideration of the traditional preference approach, which consists of a deterministic preference component and a separate noise term: \\(u(ce) = u(x) \\, w(p) + \\epsilon\\).</p>' +
+          '<ul>' +
+            '<li> An important distinction between the cognitive model and preference models is that, for the former, the noise part and the expected-behavior part are two sides of one coin &mdash; they are not separate concepts.  </li>' +
+            '<li> This could explain why we observed stronger bias and inconsistency under choice lists at the same time. <small>Also why utility curvature and likelihood insensitivity correlate with each other.</small> </li>' +
+          '</ul>'
+        },
+        {id: "cog_model2", label: "Cognitive model / PT - 2", status: "ready", eyebrow: "Cognitive model / PT - 2",
+          title: "Cognitive model or PT? <br> <small>[van Dolder 5], [van Dolder 6], [Van de gaer 6.2]</small>",
+          body:
+            '<p>I regard the cognitive-noise model as a generative one which can generalize many existing descriptive models, including prospect theory.</p>' +
+            '<ul>' +
+                '<li> It informs us why PT functionals look the way they do. </li>' +
+            '</ul>' +
+            '<p> Prospect theory still helpful? </p>' +
+            '<ul>' +
+                '<li> Yes, within a given context, it should be still useful to fit PT with historical data to predict future behavior. <small> (a useful reduced-form descriptive model.) </small> </li>' +
+                '<li> But, more caution is needed when the prediction occurs in a different context (e.g., choice versus valuation). </li>' +
+            '</ul>' +
+            '<div class="callout"><span class="callout-label">Bottom line</span> It\'s important to recognize the impacts of cognitive noise, particularly in small-stake tasks. As C4 shows, cognitive noise can amplify insensitivity or reverse it with the same choice-list frame. </div>' +
+            '</ul>'
+        }
+      ]
+    }
+  ];
+
+  var root = document.documentElement;
+  var topbar = document.getElementById("topbar");
+  var sidebar = document.getElementById("sidebar");
+  var contentInner = document.getElementById("contentInner");
+  var themeToggle = document.getElementById("themeToggle");
+
+  var state = { sectionId: "intro", itemId: null };
+
+  function findSection(id) {
+    for (var i = 0; i < SECTIONS.length; i++) if (SECTIONS[i].id === id) return SECTIONS[i];
+    return SECTIONS[0];
+  }
+
+  function applyAccent(section) {
+    root.style.setProperty("--accent", "var(" + section.accentVar + ")");
+    root.style.setProperty("--accent-soft", "var(" + section.accentSoftVar + ")");
+    var tabs = topbar.querySelectorAll(".tab");
+    tabs.forEach(function (t) {
+      if (t.dataset.section === section.id) {
+        t.style.setProperty("--tab-accent", "var(" + section.accentVar + ")");
+        t.style.setProperty("--tab-accent-soft", "var(" + section.accentSoftVar + ")");
+      }
+    });
+  }
+
+  function renderTabs() {
+    var frag = document.createDocumentFragment();
+    SECTIONS.forEach(function (sec) {
+      var ready = sec.items.filter(function (i) { return i.status === "ready"; }).length;
+      var btn = document.createElement("button");
+      btn.className = "tab";
+      btn.type = "button";
+      btn.setAttribute("role", "tab");
+      btn.dataset.section = sec.id;
+      btn.setAttribute("aria-selected", sec.id === state.sectionId ? "true" : "false");
+      btn.style.setProperty("--tab-accent", "var(" + sec.accentVar + ")");
+      btn.style.setProperty("--tab-accent-soft", "var(" + sec.accentSoftVar + ")");
+      btn.innerHTML = sec.label + ' <span class="progress">' + ready + '/' + sec.items.length + '</span>';
+      btn.addEventListener("click", function () { navigate(sec.id, null); });
+      frag.appendChild(btn);
+    });
+    topbar.insertBefore(frag, themeToggle);
+  }
+
+  function renderSidebar() {
+    var section = findSection(state.sectionId);
+    sidebar.innerHTML = "";
+    var heading = document.createElement("div");
+    heading.className = "sidebar-heading";
+    heading.textContent = section.label + " — sections";
+    sidebar.appendChild(heading);
+
+    section.items.forEach(function (item, idx) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "nav-item" + (item.status === "pending" ? " pending" : "");
+      btn.setAttribute("aria-current", item.id === state.itemId ? "true" : "false");
+      btn.innerHTML =
+        '<span class="nav-index">' + String(idx + 1).padStart(2, "0") + '</span>' +
+        '<span class="nav-dot"></span>' +
+        '<span>' + item.label + '</span>';
+      btn.addEventListener("click", function () { navigate(section.id, item.id); });
+      sidebar.appendChild(btn);
+    });
+  }
+
+  function renderContent() {
+    var section = findSection(state.sectionId);
+    var item = null;
+    section.items.forEach(function (i) { if (i.id === state.itemId) item = i; });
+    if (!item) item = section.items[0];
+
+    if (item.status === "ready") {
+      contentInner.innerHTML =
+        '<div class="eyebrow">' + item.eyebrow + '</div>' +
+        '<h1>' + item.title + '</h1>' +
+        item.body;
+    } else {
+      contentInner.innerHTML =
+        '<div class="eyebrow">' + section.label + '</div>' +
+        '<div class="pending-panel">' +
+          '<h3>Not yet drafted</h3>' +
+          '<p>&ldquo;' + item.label + '&rdquo; will be filled in during a later pass over ' + section.label + '.</p>' +
+        '</div>';
+    }
+    if (window.renderMathInElement) {
+      renderMathInElement(contentInner, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\(", right: "\\)", display: false },
+          { left: "\\[", right: "\\]", display: true }
+        ],
+        throwOnError: false
+      });
+    }
+    contentInner.scrollTop = 0;
+    document.getElementById("content").scrollTop = 0;
+  }
+
+  function navigate(sectionId, itemId, skipHash) {
+    var section = findSection(sectionId);
+    if (!itemId) {
+      var firstReady = section.items.find(function (i) { return i.status === "ready"; });
+      itemId = firstReady ? firstReady.id : section.items[0].id;
+    }
+    state.sectionId = section.id;
+    state.itemId = itemId;
+    applyAccent(section);
+    topbar.querySelectorAll(".tab").forEach(function (t) {
+      t.setAttribute("aria-selected", t.dataset.section === section.id ? "true" : "false");
+    });
+    renderSidebar();
+    renderContent();
+    if (!skipHash) {
+      try { history.replaceState(null, "", "#" + section.id + "-" + itemId); } catch (e) {}
+    }
+  }
+
+  function navigateDelta(sectionDelta, itemDelta) {
+    var secIdx = SECTIONS.findIndex(function (s) { return s.id === state.sectionId; });
+    if (sectionDelta !== 0) {
+      var nextSec = SECTIONS[(secIdx + sectionDelta + SECTIONS.length) % SECTIONS.length];
+      navigate(nextSec.id, null);
+      return;
+    }
+    if (itemDelta !== 0) {
+      var section = findSection(state.sectionId);
+      var itemIdx = section.items.findIndex(function (i) { return i.id === state.itemId; });
+      var nextIdx = (itemIdx + itemDelta + section.items.length) % section.items.length;
+      navigate(section.id, section.items[nextIdx].id);
+    }
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+    if (e.key === "ArrowLeft") { navigateDelta(-1, 0); e.preventDefault(); }
+    else if (e.key === "ArrowRight") { navigateDelta(1, 0); e.preventDefault(); }
+    else if (e.key === "ArrowUp") { navigateDelta(0, -1); e.preventDefault(); }
+    else if (e.key === "ArrowDown") { navigateDelta(0, 1); e.preventDefault(); }
+  });
+
+  themeToggle.querySelectorAll("button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var theme = b.dataset.theme;
+      if (theme === "light") root.setAttribute("data-theme", "light");
+      else root.setAttribute("data-theme", "dark");
+      themeToggle.querySelectorAll("button").forEach(function (x) {
+        x.setAttribute("aria-pressed", x === b ? "true" : "false");
+      });
+      try { localStorage.setItem("defense-theme", theme); } catch (e) {}
+    });
+  });
+
+  try {
+    var savedTheme = localStorage.getItem("defense-theme");
+    if (savedTheme === "light" || savedTheme === "dark") {
+      root.setAttribute("data-theme", savedTheme);
+      themeToggle.querySelectorAll("button").forEach(function (x) {
+        x.setAttribute("aria-pressed", x.dataset.theme === savedTheme ? "true" : "false");
+      });
+    }
+  } catch (e) {}
+
+  renderTabs();
+
+  var initial = { sectionId: "intro", itemId: null };
+  var hash = (location.hash || "").replace("#", "");
+  if (hash) {
+    var parts = hash.split("-");
+    var secId = parts.shift();
+    var itmId = parts.join("-");
+    var sec = SECTIONS.find(function (s) { return s.id === secId; });
+    if (sec) {
+      initial.sectionId = secId;
+      initial.itemId = sec.items.find(function (i) { return i.id === itmId; }) ? itmId : null;
+    }
+  }
+  navigate(initial.sectionId, initial.itemId, true);
+})();
+</script>
