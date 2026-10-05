@@ -17,12 +17,12 @@
 }
 
 /* ---------- page layout (built on the site's .page-shell / .content-section) ---------- */
-.page-shell.pwf{grid-template-columns:minmax(310px,3fr) minmax(0,7fr);align-items:start}
+.page-shell.pwf{grid-template-columns:minmax(310px,3fr) minmax(0,7fr);align-items:stretch}
 .pwf-head,.pwf-refs{grid-column:1 / -1}
-.pwf-controls{display:grid;gap:24px}
+.pwf-controls{display:grid;gap:24px;grid-template-rows:auto 1fr}   /* lower box stretches to the bottom of the row */
 .content-section.pwf-panel{padding:28px}
 .pwf-head .section-heading{margin-bottom:10px}
-.pwf-head .hero-text{font-size:1.2rem;max-width:80ch}
+.pwf-head .hero-text{font-size:1.2rem}
 .pwf .label{margin-bottom:14px}
 .pwf-plot .section-heading-inline{justify-content:space-between;align-items:center;flex-wrap:wrap}
 .pwf-plot .section-heading{margin-bottom:8px}
@@ -77,16 +77,16 @@ sup{font-size:.72em;line-height:0}
 .lg i.dash{height:0;border-top:2px dashed var(--diag);background:none}
 .lg button{border:none;background:none;color:var(--muted);cursor:pointer;font:inherit;font-size:1.2rem;line-height:1;padding:0 2px}
 .lg button:hover{color:var(--text)}
-svg#plot{display:block;width:100%;height:auto;max-width:720px;margin:0 auto;touch-action:pan-y;user-select:none}
-svg text{fill:var(--muted);font-size:13px;font-family:inherit}
+svg#plot{display:block;width:100%;height:auto;max-width:400px;margin:0 auto;touch-action:pan-y;user-select:none}
+svg text{fill:var(--muted);font-size:12px;font-family:inherit}
 svg .plotbg{fill:var(--plot-bg);stroke:var(--line);stroke-width:1}
 svg .gridline{stroke:var(--grid);stroke-width:1}
-svg .diag{stroke:var(--diag);stroke-width:1.4;stroke-dasharray:5 5}
-svg .curve{fill:none;stroke:currentColor;stroke-width:3.2;stroke-linejoin:round;stroke-linecap:round}
-svg .pinned .curve{stroke-width:2.4;opacity:.92}
-svg .jump{stroke:currentColor;stroke-width:1.5;stroke-dasharray:3 3;opacity:.7}
-svg .dot-f{fill:currentColor;stroke:currentColor;stroke-width:1.5}
-svg .dot-o{fill:var(--plot-bg);stroke:currentColor;stroke-width:2}
+svg .diag{stroke:var(--diag);stroke-width:1.2;stroke-dasharray:5 5}
+svg .curve{fill:none;stroke:currentColor;stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
+svg .pinned .curve{stroke-width:2;opacity:.92}
+svg .jump{stroke:currentColor;stroke-width:1.2;stroke-dasharray:3 3;opacity:.7}
+svg .dot-f{fill:currentColor;stroke:currentColor;stroke-width:1.2}
+svg .dot-o{fill:var(--plot-bg);stroke:currentColor;stroke-width:1.6}
 svg .hl{stroke:var(--muted);stroke-width:1;stroke-dasharray:2 3}
 svg .hc{fill:var(--accent);stroke:var(--plot-bg);stroke-width:2}
 svg .hd{fill:var(--diag);stroke:var(--plot-bg);stroke-width:1.5}
@@ -107,7 +107,7 @@ svg .hd{fill:var(--diag);stroke:var(--plot-bg);stroke-width:1.5}
 .chip .cw{display:block;font-weight:700;font-size:1.05rem}
 .chip.over .cw{color:var(--over)}
 .chip.under .cw{color:var(--under)}
-.pwf-refs{color:var(--muted);font-size:.95rem;padding:0 6px;max-width:110ch}
+.pwf-refs{color:var(--muted);font-size:.95rem;padding:0 6px}
 noscript{display:block;padding:12px;background:var(--warn-bg);color:var(--warn-ink);border-radius:var(--radius-sm)}
 </style>
 </head>
@@ -168,7 +168,7 @@ noscript{display:block;padding:12px;background:var(--warn-bg);color:var(--warn-i
       </div>
     </div>
     <div class="legend" id="legend"></div>
-    <svg id="plot" viewBox="0 0 560 560" role="img" aria-label="Plot of the probability weighting function w(p) against probability p"></svg>
+    <svg id="plot" viewBox="0 0 360 360" role="img" aria-label="Plot of the probability weighting function w(p) against probability p"></svg>
     <div class="readout idle" id="readout">Hover over (or touch) the plot to read off w(p).</div>
     <div class="warn" id="warn"></div>
     <div class="regions" id="regions"></div>
@@ -276,7 +276,7 @@ let pins = [];
 /* ------------------------------------------------------------------ */
 /*  Plot skeleton                                                      */
 /* ------------------------------------------------------------------ */
-const W = 560, M = { l: 60, r: 20, t: 20, b: 60 }, IW = W - M.l - M.r; // square plot area
+const W = 360, M = { l: 50, r: 12, t: 12, b: 46 }, IW = W - M.l - M.r; // square plot area
 const X = p => M.l + p * IW;
 const Y = w => M.t + (1 - w) * IW;
 
@@ -286,15 +286,15 @@ function buildSkeleton() {
     const t = i / 5, lab = t === 0 ? '0' : t === 1 ? '1' : t.toFixed(1);
     s += `<line class="gridline" x1="${X(t)}" y1="${Y(0)}" x2="${X(t)}" y2="${Y(1)}"/>`;
     s += `<line class="gridline" x1="${X(0)}" y1="${Y(t)}" x2="${X(1)}" y2="${Y(t)}"/>`;
-    s += `<text x="${X(t)}" y="${Y(0) + 19}" text-anchor="middle">${lab}</text>`;
-    s += `<text x="${X(0) - 10}" y="${Y(t) + 4}" text-anchor="end">${lab}</text>`;
+    s += `<text x="${X(t)}" y="${Y(0) + 16}" text-anchor="middle">${lab}</text>`;
+    s += `<text x="${X(0) - 8}" y="${Y(t) + 4}" text-anchor="end">${lab}</text>`;
   }
   s += `<line class="diag" x1="${X(0)}" y1="${Y(0)}" x2="${X(1)}" y2="${Y(1)}"/>`;
   s += `<g id="pins"></g><g id="main"></g>`;
   s += `<g id="hover" style="display:none"><line class="hl" id="hl" y1="${Y(1)}" y2="${Y(0)}"/>
-        <circle class="hd" id="hd" r="4"/><circle class="hc" id="hc" r="5.5"/></g>`;
-  s += `<text x="${X(0.5)}" y="${W - 14}" text-anchor="middle" style="font-size:15px">Objective probability, p</text>`;
-  s += `<text transform="translate(16 ${Y(0.5)}) rotate(-90)" text-anchor="middle" style="font-size:15px">Decision weight, w(p)</text>`;
+        <circle class="hd" id="hd" r="3.2"/><circle class="hc" id="hc" r="4.6"/></g>`;
+  s += `<text x="${X(0.5)}" y="${W - 8}" text-anchor="middle" style="font-size:13px">Objective probability, p</text>`;
+  s += `<text transform="translate(12 ${Y(0.5)}) rotate(-90)" text-anchor="middle" style="font-size:13px">Decision weight, w(p)</text>`;
   s += `<rect id="cap" x="${X(0)}" y="${Y(1)}" width="${IW}" height="${IW}" fill="transparent" style="cursor:crosshair"/>`;
   $('plot').innerHTML = s;
 }
@@ -325,8 +325,8 @@ function curveMarkup(S, a, b, color, cls) {
     const w0 = S.f(0, a, b), w1 = S.f(1, a, b);
     g += `<line class="jump" x1="${X(0)}" y1="${Y(0)}" x2="${X(0)}" y2="${Y(w0)}"/>`;
     g += `<line class="jump" x1="${X(1)}" y1="${Y(w1)}" x2="${X(1)}" y2="${Y(1)}"/>`;
-    g += `<circle class="dot-f" cx="${X(0)}" cy="${Y(0)}" r="4"/><circle class="dot-f" cx="${X(1)}" cy="${Y(1)}" r="4"/>`;
-    g += `<circle class="dot-o" cx="${X(0)}" cy="${Y(w0)}" r="4"/><circle class="dot-o" cx="${X(1)}" cy="${Y(w1)}" r="4"/>`;
+    g += `<circle class="dot-f" cx="${X(0)}" cy="${Y(0)}" r="3.4"/><circle class="dot-f" cx="${X(1)}" cy="${Y(1)}" r="3.4"/>`;
+    g += `<circle class="dot-o" cx="${X(0)}" cy="${Y(w0)}" r="3.4"/><circle class="dot-o" cx="${X(1)}" cy="${Y(w1)}" r="3.4"/>`;
   }
   return g + '</g>';
 }
@@ -440,13 +440,26 @@ function syncUI(skipNumber = -1) {
   }
 }
 
+/* Size the plot so the bottom of the plot card lines up with the bottom of the left column.
+   (The cards also stretch to the same row height, so they stay aligned if text wraps differently.) */
+const twoCol = window.matchMedia('(min-width: 861px)');
+function fitPlot() {
+  const svg = $('plot'), card = document.querySelector('.pwf-plot'), left = document.querySelector('.pwf-controls');
+  if (!twoCol.matches) { svg.style.maxWidth = ''; return; }
+  card.style.alignSelf = left.style.alignSelf = 'start';   // measure both columns at their natural height
+  const cur = svg.getBoundingClientRect().height;
+  const dh = left.getBoundingClientRect().height - card.getBoundingClientRect().height;
+  svg.style.maxWidth = clamp(cur + dh, 360, 480) + 'px';
+  card.style.alignSelf = left.style.alignSelf = '';
+}
+
 function applySpec(id, vals) {
   const S = SPECS[id];
   state.spec = id;
   state.v = S.params.map((P, i) => vals && isFinite(vals[i]) ? clamp(vals[i], P.min, P.max) : P.def);
   state.v.length = 2; if (S.params.length < 2) state.v[1] = NaN;
   $('spec').value = id;
-  syncUI(); draw();
+  syncUI(); draw(); fitPlot();
 }
 
 function onParam(i, value, fromNumber) {
@@ -521,6 +534,9 @@ function init() {
     if (SPECS[q.get('s')]) { id = q.get('s'); vals = [parseFloat(q.get('a')), parseFloat(q.get('b'))]; }
   } catch (e) { /* ignore */ }
   applySpec(id, vals);
+  let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(fitPlot, 80); });
+  window.addEventListener('load', fitPlot);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitPlot);
 }
 
 init();
